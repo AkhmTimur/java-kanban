@@ -1,138 +1,110 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
 public class Manager {
-    HashMap<String, TaskData> tasks = new HashMap<>();
-    HashMap<String, EpicData> epics = new HashMap<>();
+    private HashMap<Integer, TaskData> tasks = new HashMap<>();
+    private HashMap<Integer, EpicData> epics = new HashMap<>();
 
+    HashMap<Integer, TaskData> getTasks() {
+        return tasks;
+    }
 
-    void addToTasks(String name, TaskData taskData) {
-        if(name != null && !tasks.containsKey(name)) {
-            tasks.put(name, taskData);
+    HashMap<Integer, EpicData> getEpics() {
+        return epics;
+    }
+
+    void addToTasks(TaskData taskData) {
+        if(!tasks.containsKey(taskData.id)) {
+            tasks.put(taskData.id, taskData);
         }
     }
 
-    void addToEpics(String name, EpicData epicData) {
-        if(name != null && !epics.containsKey(name)) {
-            epics.put(name, epicData);
+    void addToEpics(EpicData epicData) {
+        if(!epics.containsKey(epicData.id)) {
+            epics.put(epicData.id, epicData);
         }
     }
 
-    void addSubTaskToEpics(int epicId, SubTaskData subTaskData) {
-        for (String k : epics.keySet()) {
-            if(epics.get(k).id == epicId) {
-                epics.get(k).subTasks.add(subTaskData);
-            }
-        }
+    void addSubTaskToEpics(SubTaskData subTaskData) {
+        epics.get(subTaskData.getEpicId()).addSubTask(subTaskData);
+        updateSubTask(subTaskData);
     }
 
-    void getAllTasks() {
+    ArrayList<TaskData> getAllTasks() {
+        ArrayList<TaskData> result = new ArrayList<>();
         System.out.println("Список задач: ");
-        for (String k : tasks.keySet()) {
-            System.out.println(k);
+        for (Integer k : tasks.keySet()) {
+            result.add(tasks.get(k));
         }
+        return result;
     }
 
-    void getAllEpics() {
+    ArrayList<EpicData> getAllEpics() {
+        ArrayList<EpicData> result = new ArrayList<>();
         System.out.println("Список эпиков: ");
-        for (String k : epics.keySet()) {
+        for (Integer k : epics.keySet()) {
             System.out.println(k);
+            result.add(epics.get(k));
         }
+        return result;
     }
 
-    void clearTasks() {
+    void deleteAllTasks() {
         tasks.clear();
-        System.out.println("Задачи были удалены");
     }
 
-    String getOrDeleteById(String opType) {
-        Scanner scan = new Scanner(System.in);
-        System.out.println("Вы будете искать задачу или эпик?");
-        System.out.println("1 - Задача");
-        System.out.println("2 - Эпик");
-
-        int type = scan.nextInt();
-        System.out.println("Введите название задачи");
-        String taskName = scan.next();
-        System.out.println("Введите описание");
-        String desc = scan.next();
-        int id = genID(taskName, desc);
-        if(opType == "delete") {
-            if(type == 1) {
-                for (String k : tasks.keySet()) {
-                    if(tasks.get(k).id == id) {
-                        tasks.remove(k);
-                        return "Задача удалена";
-                    }
-                }
-                return "Такой задачи нет";
-            } else {
-                for (String k : epics.keySet()) {
-                    if(epics.get(k).id == id) {
-                        epics.remove(k);
-                        return "Эпик удален";
-                    }
-                }
-                return "Такого эпика нет";
-            }
-        } else {
-            if(type == 1) {
-                for (String k : tasks.keySet()) {
-                    if(tasks.get(k).id == id) {
-                        return k;
-                    }
-                }
-                return "Такой задачи нет";
-            } else {
-                for (String k : epics.keySet()) {
-                    if(epics.get(k).id == id) {
-                        return k;
-                    }
-                }
-                return "Такого эпика нет";
-            }
-        }
-
+    void deleteAllEpics() {
+        epics.clear();
     }
 
-    void getSubTasks(String epic) {
-        System.out.println("Список подзадач " + epic);
-        if(epics.containsKey(epic)) {
-            for (SubTaskData subTask : epics.get(epic).subTasks) {
-                System.out.println(subTask.name);
-            }
-        } else {
-            System.out.println("Такого эпика нет");
-        }
-
-    }
-
-    void setTaskStatus(String taskName, int status) {
-        if(status == 1) {
-            tasks.get(taskName).status = "IN PROGRESS";
-        } else {
-            tasks.get(taskName).status = "DONE";
-        }
-
-    }
-
-    void setSubTaskStatus(String epicName, String subTaskName, String status) {
-        for (SubTaskData subTask : epics.get(epicName).subTasks) {
-            if(subTask.name.equals(subTaskName) && subTask.status != "DONE") {
-                subTask.status = status;
-            }
-        }
-        if(isEpicDone(epicName)) {
-            System.out.println("Эпик завершен!");
-        } else {
-            System.out.println("Остались незавершенные подзадачи");
+    void deleteAllSubTasks() {
+        for (Integer k : epics.keySet()) {
+            epics.get(k).subTasks.clear();
         }
     }
 
-    private boolean isEpicDone(String epicName) {
+    ArrayList<HashMap<Integer, SubTaskData>> getAllSubTasks() {
+        ArrayList<HashMap<Integer, SubTaskData>> result = new ArrayList<>();
+        for (Integer id : epics.keySet()) {
+            result.add(epics.get(id).subTasks);
+        }
+        return result;
+    }
+
+    void updateTask(TaskData taskData) {
+        tasks.put(taskData.id, taskData);
+    }
+
+    void updateEpics(EpicData epicData) {
+        epics.put(epicData.id, epicData);
+    }
+
+    void updateSubTask(SubTaskData subTaskData) {
+        epics.get(subTaskData.getEpicId()).subTasks.put(subTaskData.id, subTaskData);
+        isEpicDone(subTaskData.getEpicId());
+    }
+
+    TaskData getTaskById(int id) {
+        return tasks.get(id);
+    }
+
+    EpicData getEpicById(int id) {
+        return epics.get(id);
+    }
+
+    ArrayList<SubTaskData> getSubTaskById(int id) {
+        ArrayList<SubTaskData> result = new ArrayList<>();
+        for (Integer k : epics.keySet()) {
+            result.add(epics.get(k).subTasks.get(id));
+        }
+        return result;
+    }
+
+    private boolean isEpicDone(Integer epicId) {
         boolean result = false;
-        for (SubTaskData subTask : epics.get(epicName).subTasks) {
-            if(subTask.status == "DONE") {
+        for (Integer id : epics.get(epicId).subTasks.keySet()) {
+            if(epics.get(epicId).subTasks.get(id).status.equals("DONE")) {
                 result = true;
             } else {
                 return false;
@@ -141,16 +113,13 @@ public class Manager {
         return result;
     }
 
-    int genID(String name, String desc) {
+    int genID(String name) {
         int id = 17;
         if (name != null) {
             id = id + name.hashCode();
         }
         id = id * 31;
 
-        if (desc != null) {
-            id = id + desc.hashCode();
-        }
         return id;
     }
 }

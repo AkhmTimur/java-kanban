@@ -25,34 +25,34 @@ public class Main {
                     desc = null;
                 }
 
-                int id = manager.genID(taskName, desc);
+                int id = manager.genID(taskName);
 
-                newTaskData = new TaskData(taskName, desc, id, "NEW");
+                newTaskData = new TaskData(taskName, desc, id);
                 if (desc != null) {
                     System.out.println("Задача " + taskName + " создана. Описание - " + desc);
-                    manager.addToTasks(newTaskData.name, newTaskData);
+                    manager.addToTasks(newTaskData);
                 }
             } else if (command == 2) {
                 System.out.println("Какую задачу вам нужно дополнить подзадачей?");
                 String epicName = scan.next();
+                int id = manager.genID(epicName);
                 System.out.println("Какую подзадачу добавить?");
                 String subTaskName = scan.next();
                 System.out.println("Добавьте описание подзадаче");
                 String desc = scan.next();
 
-                if (manager.tasks.containsKey(epicName)) {
-                    TaskData newData = new TaskData(subTaskName, desc, manager.genID(subTaskName, desc), manager.tasks.get(epicName).name);
-                    SubTaskData subTask = new SubTaskData(epicName, newData);
-                    EpicData epic = new EpicData(epicName, subTask);
+                if (manager.getTasks().containsKey(id)) {
+                    newTaskData = new TaskData(subTaskName, desc, manager.genID(subTaskName));
+                    SubTaskData subTask = new SubTaskData(id,  newTaskData.name, newTaskData.description, newTaskData.id);
+                    EpicData epic = new EpicData(epicName, subTask.description, subTask.id);
                     epic.addSubTask(subTask);
-                    manager.addToEpics(epicName, epic);
-                    if (manager.tasks.containsKey(epicName)) {
-                        manager.tasks.remove(epicName);
-                    }
-                } else if(manager.epics.containsKey(epicName) ) {
-                    TaskData newData = new TaskData(subTaskName, desc, manager.genID(subTaskName, desc), "NEW");
-                    SubTaskData subTask = new SubTaskData(epicName, newData);
-                    manager.addSubTaskToEpics(manager.epics.get(epicName).id, subTask);
+                    manager.addToEpics(epic);
+                    manager.getTasks().remove(id);
+                } else if (manager.getEpics().containsKey(id)) {
+                    int subTaskId = manager.genID(epicName + subTaskName);
+                    newTaskData = new TaskData(subTaskName, desc, subTaskId);
+                    SubTaskData subTask = new SubTaskData(subTaskId, newTaskData.name, newTaskData.description, newTaskData.id);
+                    manager.addSubTaskToEpics(subTask);
                 } else {
                     System.out.println("Такой задачи нет в списке");
                 }
@@ -65,40 +65,61 @@ public class Main {
                 String choice = scan.next();
 
                 if (choice.equals("Да") || choice.equals("да")) {
-                    manager.clearTasks();
+                    manager.deleteAllTasks();
                 } else {
                     System.out.println("Задача не была удалена, попробуйте еще раз.");
                 }
             } else if (command == 5) {
-                System.out.println(manager.getOrDeleteById("get"));
             } else if (command == 6) {
-                System.out.println(manager.getOrDeleteById("delete"));
+
             } else if (command == 7) {
-                System.out.println("По какому эпику выхотите получить информацию");
-                String epicName = scan.next();
-                manager.getSubTasks(epicName);
+                manager.getAllSubTasks();
             } else if (command == 8) {
                 System.out.println("Какой задаче вы хотите изменить статус?");
                 String taskName = scan.next();
+                int id = manager.genID(taskName);
                 System.out.println("Какой статус вы хотите присвоить задаче");
                 System.out.println("1 - В процессе");
                 System.out.println("2 - Завершена");
-                int status = scan.nextInt();
-                manager.setTaskStatus(taskName, status);
+                int idStatus = scan.nextInt();
+
+
+                newTaskData = new TaskData(taskName, manager.getTasks().get(id).description, id);
+                manager.updateTask(newTaskData);
             } else if (command == 9) {
-                System.out.println("У какого эпика вы хотите изменить статус");
+                System.out.println("Статус подзадачи какого эпика вы хотите изменить?");
                 String epicName = scan.next();
+                int epicId = manager.genID(epicName);
                 System.out.println("Какой подзадаче нужно изменить статус?");
-                String subTaskStatus = scan.next();
+                String subTaskName = scan.next();
                 System.out.println("Введите статус подзадачи");
                 System.out.println("1 - В процессе");
                 System.out.println("2 - Завершена");
                 int status = scan.nextInt();
+
+                newTaskData = new TaskData(subTaskName, null, manager.genID(epicName + subTaskName));
+                SubTaskData subTaskData = new SubTaskData(epicId,  newTaskData.name, newTaskData.description, newTaskData.id);
+
                 if (status == 1) {
-                    manager.setSubTaskStatus(epicName, subTaskStatus, "IN PROGRESS");
+                    manager.updateSubTask(subTaskData);
                 } else {
-                    manager.setSubTaskStatus(epicName, subTaskStatus, "DONE");
+                    manager.updateSubTask(subTaskData);
                 }
+            } else if (command == 10) {
+                manager.deleteAllSubTasks();
+                manager.deleteAllEpics();
+            } else if (command == 11) {
+                String taskName = scan.next();
+                int taskId = manager.genID(taskName);
+                String epicName = scan.next();
+                int epicId = manager.genID(epicName);
+                String subTaskName = scan.next();
+                int subTaskId = manager.genID(subTaskName + epicName);
+
+                manager.getTaskById(taskId);
+                manager.getEpicById(epicId);
+                manager.getSubTaskById(subTaskId);
+
             } else {
                 System.out.println("Такой команды нет");
             }
@@ -116,11 +137,12 @@ public class Main {
         System.out.println("2 - Добавить подзадачу");
         System.out.println("3 - Выввести список всех задач");
         System.out.println("4 - Удалить все задачи");
-        System.out.println("5 - Получение по ID");
-        System.out.println("6 - Удаление по ID");
+        System.out.println("5 - Удаление всех заданий/эпиков/подзаданий");
+        System.out.println("6 - Обновление заданий/эпиков/подзаданий");
         System.out.println("7 - Получить список подзадач эпика");
         System.out.println("8 - Изменить статус задачи");
         System.out.println("9 - Изменить статус подзадачи эпика");
+        System.out.println("10 - Удалить все");
 
         System.out.println("0 - Выход");
     }

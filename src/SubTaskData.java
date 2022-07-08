@@ -1,24 +1,29 @@
 import java.util.Objects;
 
 public class SubTaskData extends TaskData {
-    String epicName;
+    private Integer epicId;
 
-    SubTaskData(String epicName, TaskData taskData) {
-        super(taskData.name, taskData.description, taskData.id, taskData.status);
-        this.epicName = epicName;
+    SubTaskData(Integer epicId, String name, String description, int id) {
+        super(name, description, id);
+        this.epicId = epicId;
         this.status = "NEW";
+    }
+
+    public Integer getEpicId() {
+        return epicId;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if(!super.equals(o)) return false;
         SubTaskData that = (SubTaskData) o;
-        return epicName.equals(that.epicName);
+        return epicId.equals(that.epicId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(epicName);
+        return Objects.hash(super.hashCode(), epicId);
     }
 }
