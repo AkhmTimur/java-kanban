@@ -4,16 +4,14 @@ public class TaskData {
     protected String name;
     protected String description;
     protected int id;
-    protected String status = "NEW";
+    protected String status;
 
-    TaskData() {
-        status = "NEW";
-    }
 
     TaskData(String name, String description, int id) {
         this.name = name;
         this.description = description;
         this.id = id;
+        this.status = "NEW";
     }
 
     @Override

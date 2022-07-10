@@ -5,14 +5,7 @@ import java.util.Scanner;
 public class Manager {
     private HashMap<Integer, TaskData> tasks = new HashMap<>();
     private HashMap<Integer, EpicData> epics = new HashMap<>();
-
-    HashMap<Integer, TaskData> getTasks() {
-        return tasks;
-    }
-
-    HashMap<Integer, EpicData> getEpics() {
-        return epics;
-    }
+    private HashMap<Integer, SubTaskData> subTasks = new HashMap<>();
 
     void addToTasks(TaskData taskData) {
         if(!tasks.containsKey(taskData.id)) {
@@ -26,9 +19,39 @@ public class Manager {
         }
     }
 
+    void addToSubTasks(SubTaskData subTaskData) {
+        if(!subTasks.containsKey(subTaskData.id)) {
+            subTasks.put(subTaskData.id, subTaskData);
+        }
+    }
+
     void addSubTaskToEpics(SubTaskData subTaskData) {
         epics.get(subTaskData.getEpicId()).addSubTask(subTaskData);
         updateSubTask(subTaskData);
+    }
+
+    HashMap<Integer, TaskData> getTasks() {
+        return tasks;
+    }
+
+    HashMap<Integer, EpicData> getEpics() {
+        return epics;
+    }
+
+    TaskData getTaskById(int id) {
+        return tasks.get(id);
+    }
+
+    EpicData getEpicById(int id) {
+        return epics.get(id);
+    }
+
+    ArrayList<SubTaskData> getSubTaskById(int id) {
+        ArrayList<SubTaskData> result = new ArrayList<>();
+        for (Integer k : epics.keySet()) {
+            result.add(subTasks.get(id));
+        }
+        return result;
     }
 
     ArrayList<TaskData> getAllTasks() {
@@ -50,6 +73,14 @@ public class Manager {
         return result;
     }
 
+    ArrayList<HashMap<Integer, SubTaskData>> getAllSubTasks() {
+        ArrayList<HashMap<Integer, SubTaskData>> result = new ArrayList<>();
+        for (Integer id : epics.keySet()) {
+            result.add(subTasks);
+        }
+        return result;
+    }
+
     void deleteAllTasks() {
         tasks.clear();
     }
@@ -59,17 +90,7 @@ public class Manager {
     }
 
     void deleteAllSubTasks() {
-        for (Integer k : epics.keySet()) {
-            epics.get(k).subTasks.clear();
-        }
-    }
-
-    ArrayList<HashMap<Integer, SubTaskData>> getAllSubTasks() {
-        ArrayList<HashMap<Integer, SubTaskData>> result = new ArrayList<>();
-        for (Integer id : epics.keySet()) {
-            result.add(epics.get(id).subTasks);
-        }
-        return result;
+        subTasks.clear();
     }
 
     void updateTask(TaskData taskData) {
@@ -81,30 +102,14 @@ public class Manager {
     }
 
     void updateSubTask(SubTaskData subTaskData) {
-        epics.get(subTaskData.getEpicId()).subTasks.put(subTaskData.id, subTaskData);
+        subTasks.put(subTaskData.id, subTaskData);
         isEpicDone(subTaskData.getEpicId());
-    }
-
-    TaskData getTaskById(int id) {
-        return tasks.get(id);
-    }
-
-    EpicData getEpicById(int id) {
-        return epics.get(id);
-    }
-
-    ArrayList<SubTaskData> getSubTaskById(int id) {
-        ArrayList<SubTaskData> result = new ArrayList<>();
-        for (Integer k : epics.keySet()) {
-            result.add(epics.get(k).subTasks.get(id));
-        }
-        return result;
     }
 
     private boolean isEpicDone(Integer epicId) {
         boolean result = false;
-        for (Integer id : epics.get(epicId).subTasks.keySet()) {
-            if(epics.get(epicId).subTasks.get(id).status.equals("DONE")) {
+        for (Integer id : subTasks.keySet()) {
+            if(subTasks.get(id).status.equals("DONE") && subTasks.get(id).getEpicId() == epicId) {
                 result = true;
             } else {
                 return false;

@@ -1,22 +1,14 @@
-import java.util.HashMap;
+
+import java.util.ArrayList;
 
 public class EpicData extends TaskData {
-    private HashMap<Integer, SubTaskData> subTasks = new HashMap<>();
-    private String status = "NEW";
+    private ArrayList<Integer> subTaskIdList = new ArrayList<>();
 
     EpicData(String epicName, String description, int id) {
-        this.name = epicName;
-        this.id = id;
-        this.description = description;
-    }
-
-    public HashMap<Integer, SubTaskData> getSubTasks() {
-        return subTasks;
+        super(epicName, description, id);
     }
 
     void addSubTask(SubTaskData subTaskData) {
-        subTasks.put(subTaskData.id, subTaskData);
+        subTaskIdList.add(subTaskData.id);
     }
-
-
 }

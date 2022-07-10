@@ -6,7 +6,6 @@ public class SubTaskData extends TaskData {
     SubTaskData(Integer epicId, String name, String description, int id) {
         super(name, description, id);
         this.epicId = epicId;
-        this.status = "NEW";
     }
 
     public Integer getEpicId() {
