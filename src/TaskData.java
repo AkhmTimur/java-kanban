@@ -6,12 +6,21 @@ public class TaskData {
     protected int id;
     protected String status;
 
+    TaskData() {
+        this.status = "NEW";
+    }
 
-    TaskData(String name, String description, int id) {
+    protected int getId() {
+        return id;
+    }
+
+    TaskData(String name, String description) {
         this.name = name;
         this.description = description;
+    }
+
+    void setId(int id) {
         this.id = id;
-        this.status = "NEW";
     }
 
     @Override

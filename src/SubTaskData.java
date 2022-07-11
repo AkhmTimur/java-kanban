@@ -3,8 +3,8 @@ import java.util.Objects;
 public class SubTaskData extends TaskData {
     private Integer epicId;
 
-    SubTaskData(Integer epicId, String name, String description, int id) {
-        super(name, description, id);
+    SubTaskData(Integer epicId, String name, String description) {
+        super(name, description);
         this.epicId = epicId;
     }
 
