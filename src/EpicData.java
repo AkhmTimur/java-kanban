@@ -14,7 +14,7 @@ public class EpicData extends TaskData {
     }
 
     void removeSubTask(int id) {
-
+        subTaskIdList.remove(id);
     }
 
     void addSubTask(SubTaskData subTaskData) {
