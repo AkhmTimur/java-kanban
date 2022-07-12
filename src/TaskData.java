@@ -6,7 +6,9 @@ public class TaskData {
     protected int id;
     protected String status;
 
-    TaskData() {
+    TaskData(String name, String description) {
+        this.name = name;
+        this.description = description;
         this.status = "NEW";
     }
 
@@ -14,10 +16,15 @@ public class TaskData {
         return id;
     }
 
-    TaskData(String name, String description) {
-        this.name = name;
-        this.description = description;
+    public String getStatus() {
+        return status;
     }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+
 
     void setId(int id) {
         this.id = id;
@@ -29,9 +36,9 @@ public class TaskData {
         if (o == null || getClass() != o.getClass()) return false;
         TaskData taskData = (TaskData) o;
         return id == taskData.id &&
-                name.equals(taskData.name) &&
+                Objects.equals(name, taskData.name) &&
                 Objects.equals(description, taskData.description) &&
-                status.equals(taskData.status);
+                Objects.equals(status, taskData.status);
     }
 
     @Override

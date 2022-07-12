@@ -21,10 +21,12 @@ public class Manager {
         subTaskData.setId(genID());
         subTasks.put(subTaskData.getId(), subTaskData);
         addSubTaskToEpics(subTaskData);
-        if(epics.get(subTaskData.getEpicId()).status.equals("DONE")) {
-            EpicData epicData = new EpicData(epics.get(subTaskData.getEpicId()).name, epics.get(subTaskData.getEpicId()).description, "IN PROGRESS");
-            updateEpic(epicData);
+
+        EpicData epicData = epics.get(subTaskData.getEpicId());
+        if (epicData != null && "DONE".equals(epicData.getStatus())) {
+            epicData.setStatus("IN_PROGRESS");
         }
+        updateEpic(epicData);
     }
 
     private void addSubTaskToEpics(SubTaskData subTaskData) {
@@ -47,12 +49,24 @@ public class Manager {
         return tasks.remove(id);
     }
 
-    EpicData deleteEpicById(int id) {
-        return epics.remove(id);
+    void deleteEpicById(int id) {
+        EpicData epic = epics.remove(id);
+        if (epic == null) {
+            return;
+        }
+        for (Integer subTaskId : epic.getSubTaskIdList()) {
+            subTasks.remove(subTaskId);
+        }
     }
 
-    SubTaskData deleteSubTaskById(int id) {
-        return subTasks.remove(id);
+    void deleteSubTaskById(int id) {
+        SubTaskData subtask = subTasks.remove(id);
+        if (subtask == null) {
+            return;
+        }
+        EpicData epic = epics.get(subtask.getEpicId());
+        epic.removeSubTask(Integer.valueOf(id));
+        updateEpicStatus(epic.getId());
     }
 
     ArrayList<TaskData> getAllTasks() {
@@ -73,17 +87,15 @@ public class Manager {
 
     void deleteAllEpics() {
         epics.clear();
-        deleteAllSubTasks();
+        subTasks.clear();
     }
 
     void deleteAllSubTasks() {
         subTasks.clear();
-        for (Integer k : epics.keySet()) {
-            epics.get(k).getSubTaskIdList().clear();
-            EpicData epicData = new EpicData(epics.get(k).name, epics.get(k).description, "NEW");
-            updateEpic(epicData);
+        for (EpicData epicData : epics.values()) {
+            epicData.clearSubTaskIdList();
+            epicData.setStatus("NEW");
         }
-
     }
 
     void updateTask(TaskData taskData) {
@@ -96,28 +108,39 @@ public class Manager {
 
     void updateSubTask(SubTaskData subTaskData) {
         subTasks.put(subTaskData.getId(), subTaskData);
-
-        if(epics.get(subTaskData.getEpicId()).status.equals("DONE")) {
-            EpicData epicData = new EpicData(epics.get(subTaskData.getEpicId()).name, epics.get(subTaskData.getEpicId()).description, "IN PROGRESS");
-            updateEpic(epicData);
-        }
-
-        isEpicDone(subTaskData.getEpicId());
+        int epicId = subTaskData.getEpicId();
+        updateEpicStatus(epicId);
     }
 
-    private boolean isEpicDone(Integer epicId) {
-        boolean result = false;
-        for (Integer id : subTasks.keySet()) {
-            if(subTasks.get(id).getEpicId() == epicId && subTasks.get(id).status.equals("DONE")) {
-                result = true;
-            } else {
-                return false;
+    void updateEpicStatus(int id) {
+        ArrayList<String> subTasksStatuses = new ArrayList<>();
+        ArrayList<String> uniqueStatuses = new ArrayList<>();
+
+        for (SubTaskData subTask : subTasks.values()) {
+            if (subTask.getEpicId() == id) {
+                subTasksStatuses.add(subTask.status);
             }
         }
-        return result;
+
+        for (String subTasksStatus : subTasksStatuses) {
+            if(!uniqueStatuses.contains(subTasksStatus)) {
+                uniqueStatuses.add(subTasksStatus);
+            }
+        }
+
+        if (epics.get(id).getSubTaskIdList().size() == 0 ||
+                (uniqueStatuses.size() == 1 && uniqueStatuses.get(0).equals("NEW"))) {
+            epics.get(id).setStatus("NEW");
+        } else if (uniqueStatuses.size() == 1 && uniqueStatuses.get(0).equals("DONE")) {
+            epics.get(id).setStatus("DONE");
+        } else {
+            epics.get(id).setStatus("IN_PROGRESS");
+        }
     }
 
-    int genID() {
+
+
+    private int genID() {
         nextId++;
         return nextId;
     }

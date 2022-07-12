@@ -9,6 +9,14 @@ public class EpicData extends TaskData {
         this.status = status;
     }
 
+    void clearSubTaskIdList() {
+        subTaskIdList.clear();
+    }
+
+    void removeSubTask(int id) {
+
+    }
+
     void addSubTask(SubTaskData subTaskData) {
         subTaskIdList.add(subTaskData.id);
     }

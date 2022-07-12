@@ -3,13 +3,16 @@ import java.util.Objects;
 public class SubTaskData extends TaskData {
     private Integer epicId;
 
-    SubTaskData(Integer epicId, String name, String description) {
+    SubTaskData(String name, String description) {
         super(name, description);
-        this.epicId = epicId;
     }
 
     public Integer getEpicId() {
         return epicId;
+    }
+
+    public void setEpicId(Integer epicId) {
+        this.epicId = epicId;
     }
 
     @Override
@@ -18,7 +21,7 @@ public class SubTaskData extends TaskData {
         if (o == null || getClass() != o.getClass()) return false;
         if(!super.equals(o)) return false;
         SubTaskData that = (SubTaskData) o;
-        return epicId.equals(that.epicId);
+        return Objects.equals(epicId, that.epicId);
     }
 
     @Override
