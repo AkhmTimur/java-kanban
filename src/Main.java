@@ -5,69 +5,75 @@ public class Main {
     public static void main(String[] args) {
 
         Scanner scan = new Scanner(System.in);
-        TaskData newTaskData;
-        Manager manager = new Manager();
 
+        Managers managers = new Managers();
+        TaskManager inMemoryTaskManager =  managers.getDefault();
+
+        TaskData newTaskData = new TaskData("Победить в чемпионате по поеданию бургеров", "Нужно тренироваться, едим бургеры!");
+        TaskData newTaskData1 = new TaskData("Пробежать марафон", "Попробовать свои силы на марафоне который будет осенью");
+        TaskData newTaskData2 = new TaskData("Съездить в отпуск", "На марс");
+        TaskData newTaskData3 = new TaskData("Съездить в отпуск", "На марс");
+        TaskData newTaskData4 = new TaskData("Съездить в отпуск", "На марс");
+        TaskData newTaskData5 = new TaskData("Съездить в отпуск", "На марс");
+        TaskData newTaskData6 = new TaskData("Съездить в отпуск", "На марс");
+        TaskData newTaskData7 = new TaskData("Съездить в отпуск", "На марс");
+        TaskData newTaskData8 = new TaskData("Съездить в отпуск", "На марс");
+        TaskData newTaskData9 = new TaskData("Съездить в отпуск", "На марс");
 
         printMenu();
         int command = scan.nextInt();
 
         while (command != 0) {
             if (command == 1) {
-                System.out.println("Какую задачу добавить?");
-                String taskName = scan.next();
-                String desc;
-                if (taskName != null) {
-                    System.out.println("Добавьте описание");
-                    desc = scan.next();
-                } else {
-                    System.out.println("Вы не введи название задачи");
-                    desc = null;
-                }
+                inMemoryTaskManager.addToTasks(newTaskData);
+                inMemoryTaskManager.addToTasks(newTaskData1);
+                inMemoryTaskManager.addToTasks(newTaskData2);
+                inMemoryTaskManager.addToTasks(newTaskData3);
+                inMemoryTaskManager.addToTasks(newTaskData4);
+                inMemoryTaskManager.addToTasks(newTaskData5);
+                inMemoryTaskManager.addToTasks(newTaskData6);
+                inMemoryTaskManager.addToTasks(newTaskData7);
+                inMemoryTaskManager.addToTasks(newTaskData8);
+                inMemoryTaskManager.addToTasks(newTaskData9);
+                inMemoryTaskManager.addToTasks(newTaskData9);
 
-                newTaskData = new TaskData(taskName, desc);
-                if (desc != null) {
-                    System.out.println("Задача " + taskName + " создана. Описание - " + desc);
-                    manager.addToTasks(newTaskData);
-                }
             } else if (command == 2) {
-                System.out.println("Какую задачу вам нужно дополнить подзадачей?");
-                String epicName = scan.next();
-                System.out.println("Какую подзадачу добавить?");
-                String subTaskName = scan.next();
-                System.out.println("Добавьте описание подзадаче");
-                String desc = scan.next();
+                String epicName = "Победить в чемпионате по поеданию бургеров";
+                String subTaskName = "Поддерживать здоровье";
+                String desc = "Не забываем двигаться, нужно гулять!";
 
-                if (!manager.getAllTasks().contains(epicName)) {
-                    newTaskData = new TaskData(subTaskName, desc);
-                    SubTaskData subTask = new SubTaskData(newTaskData.name, newTaskData.description);
-                    EpicData epic = new EpicData(epicName, subTask.description, "NEW");
-                    epic.addSubTask(subTask);
-                    manager.addToEpics(epic);
-                    manager.addToSubTasks(subTask);
+                newTaskData = new TaskData(subTaskName, desc);
+                SubTaskData subTask = new SubTaskData(newTaskData.name, newTaskData.description);
+                EpicData epic = new EpicData(epicName, subTask.description, TaskData.statuses.NEW);
+                int epicId = inMemoryTaskManager.addToEpics(epic);
+                subTask.setEpicId(epicId);
+                inMemoryTaskManager.addToSubTasks(subTask);
+                epic.addSubTask(subTask);
 
-                    for(int i = 0; i < manager.getAllTasks().size(); i++) {
-                        if(manager.getAllTasks().get(i).name == epicName) {
-                            manager.updateTask(manager.getAllTasks().get(i));
-                        }
+                for(int i = 0; i < inMemoryTaskManager.getAllTasks().size(); i++) {
+                    if(inMemoryTaskManager.getAllTasks().get(i).name.equals(epicName)) {
+                        inMemoryTaskManager.updateTask(inMemoryTaskManager.getAllTasks().get(i));
                     }
-                } else if (!manager.getAllEpics().contains(epicName)) {
-                    newTaskData = new TaskData(subTaskName, desc);
-                    SubTaskData subTask = new SubTaskData(newTaskData.name, newTaskData.description);
-                    manager.addToSubTasks(subTask);
-                } else {
-                    System.out.println("Такой задачи нет в списке");
                 }
 
+                for (EpicData allEpic : inMemoryTaskManager.getAllEpics()) {
+                    if (!allEpic.name.equals(epicName)) {
+                        newTaskData = new TaskData(subTaskName, desc);
+                        SubTaskData newSubTask = new SubTaskData(newTaskData.name, newTaskData.description);
+                        inMemoryTaskManager.addToSubTasks(newSubTask);
+                    } else {
+                        System.out.println("Такой задачи нет в списке");
+                    }
+                }
             } else if (command == 3) {
-                manager.getAllTasks();
-                manager.getAllEpics();
+                inMemoryTaskManager.getAllTasks();
+                inMemoryTaskManager.getAllEpics();
             } else if (command == 4) {
                 System.out.println("Вы точо хотите удалить все задачи?");
                 String choice = scan.next();
 
                 if (choice.equals("Да") || choice.equals("да")) {
-                    manager.deleteAllTasks();
+                    inMemoryTaskManager.deleteAllTasks();
                 } else {
                     System.out.println("Задача не была удалена, попробуйте еще раз.");
                 }
@@ -78,11 +84,11 @@ public class Main {
                 int choice = scan.nextInt();
 
                 if(choice == 1) {
-                    manager.deleteAllEpics();
+                    inMemoryTaskManager.deleteAllEpics();
                 } else if(choice == 2) {
-                    manager.deleteAllTasks();
+                    inMemoryTaskManager.deleteAllTasks();
                 } else if(choice == 3) {
-                    manager.deleteAllSubTasks();
+                    inMemoryTaskManager.deleteAllSubTasks();
                 }
             } else if (command == 6) {
                 System.out.println("1 - Удалить задачу");
@@ -92,32 +98,32 @@ public class Main {
                 System.out.println("Введите название задачи/эпика/подзадачи");
 
                 if(choice == 1) {
-                    for (int i = 0; i < manager.getAllTasks().size(); i++) {
-                        if(manager.getAllTasks().get(i).name == scan.next()) {
-                            manager.deleteTaskById(manager.getAllTasks().get(i).id);
+                    for (int i = 0; i < inMemoryTaskManager.getAllTasks().size(); i++) {
+                        if(inMemoryTaskManager.getAllTasks().get(i).name.equals(scan.next()) ) {
+                            inMemoryTaskManager.deleteTaskById(inMemoryTaskManager.getAllTasks().get(i).id);
                         }
                     }
                 } else if(choice == 2) {
-                    for (int i = 0; i < manager.getAllTasks().size(); i++) {
-                        if(manager.getAllTasks().get(i).name == scan.next()) {
-                            manager.deleteEpicById(manager.getAllTasks().get(i).id);
+                    for (int i = 0; i < inMemoryTaskManager.getAllTasks().size(); i++) {
+                        if(inMemoryTaskManager.getAllTasks().get(i).name.equals(scan.next())) {
+                            inMemoryTaskManager.deleteEpicById(inMemoryTaskManager.getAllTasks().get(i).id);
                         }
                     }
                 } else if(choice == 3) {
-                    for (int i = 0; i < manager.getAllTasks().size(); i++) {
-                        if(manager.getAllTasks().get(i).name == scan.next()) {
-                            manager.deleteSubTaskById(manager.getAllTasks().get(i).id);
+                    for (int i = 0; i < inMemoryTaskManager.getAllTasks().size(); i++) {
+                        if(inMemoryTaskManager.getAllTasks().get(i).name.equals(scan.next())) {
+                            inMemoryTaskManager.deleteSubTaskById(inMemoryTaskManager.getAllTasks().get(i).id);
                         }
                     }
                 }
             } else if (command == 7) {
-                manager.getAllSubTasks();
+                inMemoryTaskManager.getAllSubTasks();
             } else if (command == 8) {
                 System.out.println("Какой задаче вы хотите изменить статус?");
                 String taskName = scan.next();
                 String desc = "";
 
-                for (TaskData task : manager.getAllTasks()) {
+                for (TaskData task : inMemoryTaskManager.getAllTasks()) {
                     if(taskName == task.name) {
                         desc = task.description;
                     } else {
@@ -125,7 +131,7 @@ public class Main {
                     }
                 }
                 newTaskData = new TaskData(taskName, desc);
-                manager.updateTask(newTaskData);
+                inMemoryTaskManager.updateTask(newTaskData);
             } else if (command == 9) {
                 System.out.println("Какой подзадаче нужно изменить статус?");
                 String subTaskName = scan.next();
@@ -138,11 +144,29 @@ public class Main {
                 SubTaskData subTaskData = new SubTaskData(newTaskData.name, newTaskData.description);
 
                 if (status == 1) {
-                    manager.updateSubTask(subTaskData);
+                    inMemoryTaskManager.updateSubTask(subTaskData);
                 } else {
-                    manager.updateSubTask(subTaskData);
+                    inMemoryTaskManager.updateSubTask(subTaskData);
                 }
             }  else if (command == 10) {
+
+                System.out.println("1 - Получить задачу");
+                System.out.println("2 - Получить эпик");
+                System.out.println("3 - Получить подзадачу");
+                int type = scan.nextInt();
+
+                if(type == 1) {
+                    for (int i = 0; i < 10; i++) {
+                        inMemoryTaskManager.getTaskById(i);
+                    }
+                } else if(type == 2) {
+                    int id = scan.nextInt();
+                    inMemoryTaskManager.getEpicById(id);
+                } else if(type == 3) {
+                    int id = scan.nextInt();
+                    inMemoryTaskManager.getSubTaskById(id);
+                }
+
 
             } else {
                 System.out.println("Такой команды нет");

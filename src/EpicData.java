@@ -4,7 +4,7 @@ import java.util.ArrayList;
 public class EpicData extends TaskData {
     private ArrayList<Integer> subTaskIdList = new ArrayList<>();
 
-    public EpicData(String name, String description, String status) {
+    public EpicData(String name, String description, TaskData.statuses status) {
         super(name, description);
         this.status = status;
     }

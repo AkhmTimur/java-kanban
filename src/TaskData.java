@@ -4,23 +4,28 @@ public class TaskData {
     protected String name;
     protected String description;
     protected int id;
-    protected String status;
+    protected TaskData.statuses status;
+    enum statuses {
+        NEW,
+        IN_PROGRESS,
+        DONE
+    }
 
     TaskData(String name, String description) {
         this.name = name;
         this.description = description;
-        this.status = "NEW";
+        this.status = statuses.NEW;
     }
 
     protected int getId() {
         return id;
     }
 
-    public String getStatus() {
+    public TaskData.statuses getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(TaskData.statuses status) {
         this.status = status;
     }
 
