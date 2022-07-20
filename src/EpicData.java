@@ -1,10 +1,10 @@
 
 import java.util.ArrayList;
 
-public class EpicData extends TaskData {
+class EpicData extends TaskData {
     private ArrayList<Integer> subTaskIdList = new ArrayList<>();
 
-    public EpicData(String name, String description, TaskData.statuses status) {
+    EpicData(String name, String description, Statuses.statuses status) {
         super(name, description);
         this.status = status;
     }
@@ -13,7 +13,7 @@ public class EpicData extends TaskData {
         subTaskIdList.clear();
     }
 
-    void removeSubTask(int id) {
+    void removeSubTask(Integer id) {
         subTaskIdList.remove(id);
     }
 

@@ -1,22 +1,13 @@
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public interface TaskManager {
-    int nextId = 0;
-    HashMap<Integer, TaskData> tasks = new HashMap<>();
-    HashMap<Integer, EpicData> epics = new HashMap<>();
-    HashMap<Integer, SubTaskData> subTasks = new HashMap<>();
 
     void addToTasks(TaskData taskData);
 
     int addToEpics(EpicData epicData);
 
     void addToSubTasks(SubTaskData subTaskData);
-
-    private void addSubTaskToEpics(SubTaskData subTaskData) {
-        epics.get(subTaskData.getEpicId()).addSubTask(subTaskData);
-    }
 
     TaskData getTaskById(int id);
 
@@ -48,5 +39,5 @@ public interface TaskManager {
 
     void updateSubTask(SubTaskData subTaskData);
 
-    void updateEpicStatus(int id);
+    List<TaskData> getHistory();
 }

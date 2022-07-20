@@ -6,12 +6,10 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void add(TaskData data) {
-        if (history.size() < 10 ) {
-            history.add(data);
-        } else {
+        if (history.size() >= 10 ) {
             history.remove(0);
-            history.add(data);
         }
+        history.add(data);
     }
 
     @Override
