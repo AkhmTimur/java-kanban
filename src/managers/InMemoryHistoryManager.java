@@ -1,3 +1,8 @@
+package managers;
+
+import dataClasses.TaskData;
+import interfaces.HistoryManager;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -6,7 +11,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void add(TaskData data) {
-        if (history.size() >= 10 ) {
+        if (history.size() >= 10) {
             history.remove(0);
         }
         history.add(data);

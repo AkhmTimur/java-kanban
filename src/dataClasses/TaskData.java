@@ -1,32 +1,39 @@
+package dataClasses;
+
+import enums.Statuses;
+
 import java.util.Objects;
 
 public class TaskData {
-    protected String name;
-    protected String description;
-    protected int id;
-    protected Statuses.statuses status;
+    private String name;
+    private String description;
+    private int id;
+    public Statuses status;
 
-    TaskData(String name, String description) {
+    public TaskData(String name, String description) {
         this.name = name;
         this.description = description;
-        this.status = Statuses.statuses.NEW;
+        this.status = Statuses.NEW;
     }
 
-    protected int getId() {
+    public int getId() {
         return id;
     }
 
-    public Statuses.statuses getStatus() {
-        return status;
+    public String getName() {
+        return name;
     }
 
-    public void setStatus(Statuses.statuses status) {
+    public String getDescription() {
+        return description;
+    }
+
+    public void setStatus(Statuses status) {
         this.status = status;
     }
 
 
-
-    void setId(int id) {
+    public void setId(int id) {
         this.id = id;
     }
 

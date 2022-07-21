@@ -1,3 +1,12 @@
+package managers;
+
+import dataClasses.EpicData;
+import dataClasses.SubTaskData;
+import dataClasses.TaskData;
+import enums.Statuses;
+import interfaces.HistoryManager;
+import interfaces.TaskManager;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,9 +38,7 @@ public class InMemoryTaskManager implements TaskManager {
         subTasks.put(subTaskData.getId(), subTaskData);
         EpicData epicData = epics.get(subTaskData.getEpicId());
         epicData.addSubTask(subTaskData);
-        if (Statuses.statuses.NEW.equals(epicData.getStatus())) {
-            epicData.setStatus(Statuses.statuses.IN_PROGRESS);
-        }
+        updateEpicStatus(epicData.getId());
         updateEpic(epicData);
     }
 
@@ -115,7 +122,7 @@ public class InMemoryTaskManager implements TaskManager {
         subTasks.clear();
         for (EpicData epicData : epics.values()) {
             epicData.clearSubTaskIdList();
-            epicData.setStatus(Statuses.statuses.NEW);
+            epicData.setStatus(Statuses.NEW);
         }
     }
 
@@ -137,8 +144,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private void updateEpicStatus(int id) {
-        ArrayList<Statuses.statuses> subTasksStatuses = new ArrayList<>();
-        ArrayList<Statuses.statuses> uniqueStatuses = new ArrayList<>();
+        ArrayList<Statuses> subTasksStatuses = new ArrayList<>();
+        ArrayList<Statuses> uniqueStatuses = new ArrayList<>();
 
         for (SubTaskData subTask : subTasks.values()) {
             if (subTask.getEpicId() == id) {
@@ -146,19 +153,19 @@ public class InMemoryTaskManager implements TaskManager {
             }
         }
 
-        for (Statuses.statuses subTasksStatus : subTasksStatuses) {
+        for (Statuses subTasksStatus : subTasksStatuses) {
             if (!uniqueStatuses.contains(subTasksStatus)) {
                 uniqueStatuses.add(subTasksStatus);
             }
         }
 
         if (epics.get(id).getSubTaskIdList().size() == 0 ||
-                (uniqueStatuses.size() == 1 && uniqueStatuses.get(0).equals(Statuses.statuses.NEW))) {
-            epics.get(id).setStatus(Statuses.statuses.NEW);
-        } else if (uniqueStatuses.size() == 1 && uniqueStatuses.get(0).equals(Statuses.statuses.DONE)) {
-            epics.get(id).setStatus(Statuses.statuses.DONE);
+                (uniqueStatuses.size() == 1 && uniqueStatuses.get(0) == Statuses.NEW)) {
+            epics.get(id).setStatus(Statuses.NEW);
+        } else if (uniqueStatuses.size() == 1 && uniqueStatuses.get(0) == Statuses.DONE) {
+            epics.get(id).setStatus(Statuses.DONE);
         } else {
-            epics.get(id).setStatus(Statuses.statuses.IN_PROGRESS);
+            epics.get(id).setStatus(Statuses.IN_PROGRESS);
         }
     }
 

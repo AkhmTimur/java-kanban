@@ -1,3 +1,9 @@
+package interfaces;
+
+import dataClasses.EpicData;
+import dataClasses.SubTaskData;
+import dataClasses.TaskData;
+
 import java.util.ArrayList;
 import java.util.List;
 
