@@ -1,11 +1,14 @@
 package interfaces;
 
 import dataClasses.TaskData;
+import managers.Node;
 
-import java.util.List;
+import java.util.ArrayList;
 
-public interface HistoryManager {
+public interface HistoryManager<T> {
     void add(TaskData Task);
 
-    List<TaskData> getHistory();
+    void removeNode(Node<T> node);
+
+    ArrayList<TaskData> getHistory();
 }

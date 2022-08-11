@@ -5,6 +5,8 @@ import enums.Statuses;
 import interfaces.HistoryManager;
 import interfaces.TaskManager;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import managers.Managers;
@@ -18,15 +20,14 @@ public class Main {
         HistoryManager inMemoryHistoryManager = Managers.getHistoryDefault();
 
         TaskData newTaskData = new TaskData("Победить в чемпионате по поеданию бургеров", "Нужно тренироваться, едим бургеры!");
+        inMemoryTaskManager.addToTasks(newTaskData);
         TaskData newTaskData1 = new TaskData("Пробежать марафон", "Попробовать свои силы на марафоне который будет осенью");
-        TaskData newTaskData2 = new TaskData("Съездить в отпуск", "На марс");
-        TaskData newTaskData3 = new TaskData("Съездить в отпуск", "На марс");
-        TaskData newTaskData4 = new TaskData("Съездить в отпуск", "На марс");
-        TaskData newTaskData5 = new TaskData("Съездить в отпуск", "На марс");
-        TaskData newTaskData6 = new TaskData("Съездить в отпуск", "На марс");
-        TaskData newTaskData7 = new TaskData("Съездить в отпуск", "На марс");
-        TaskData newTaskData8 = new TaskData("Съездить в отпуск", "На марс");
-        TaskData newTaskData9 = new TaskData("Съездить в отпуск", "На марс");
+        inMemoryTaskManager.addToTasks(newTaskData1);
+
+        EpicData epic0 = new EpicData("Переехать", "Что-то сделать в процессе", Statuses.NEW);
+        inMemoryTaskManager.addToEpics(epic0);
+        EpicData epic3 = new EpicData("Переехать3", "Что-то сделать в процессе3", Statuses.NEW);
+        inMemoryTaskManager.addToEpics(epic3);
 
         printMenu();
         int command = scan.nextInt();
@@ -35,15 +36,34 @@ public class Main {
             if (command == 1) {
                 inMemoryTaskManager.addToTasks(newTaskData);
                 inMemoryTaskManager.addToTasks(newTaskData1);
-                inMemoryTaskManager.addToTasks(newTaskData2);
-                inMemoryTaskManager.addToTasks(newTaskData3);
-                inMemoryTaskManager.addToTasks(newTaskData4);
-                inMemoryTaskManager.addToTasks(newTaskData5);
-                inMemoryTaskManager.addToTasks(newTaskData6);
-                inMemoryTaskManager.addToTasks(newTaskData7);
-                inMemoryTaskManager.addToTasks(newTaskData8);
-                inMemoryTaskManager.addToTasks(newTaskData9);
-                inMemoryTaskManager.addToTasks(newTaskData9);
+
+                SubTaskData subT1 = new SubTaskData("Собрать вещи", "Собирать вещи");
+                SubTaskData subT2 = new SubTaskData("Собрать вещи2", "Собирать вещи2");
+                SubTaskData subT3 = new SubTaskData("Собрать вещи3", "Собирать вещи3");
+                subT1.setEpicId(epic3.getId());
+                subT2.setEpicId(epic3.getId());
+                subT3.setEpicId(epic3.getId());
+                inMemoryTaskManager.addToSubTasks(subT1);
+                inMemoryTaskManager.addToSubTasks(subT2);
+                inMemoryTaskManager.addToSubTasks(subT3);
+                epic3.addSubTask(subT1);
+                epic3.addSubTask(subT2);
+                epic3.addSubTask(subT3);
+
+                inMemoryTaskManager.getTaskById(newTaskData.getId());
+                inMemoryTaskManager.getTaskById(newTaskData1.getId());
+                inMemoryTaskManager.getEpicById(epic3.getId());
+                inMemoryTaskManager.getEpicById(epic0.getId());
+                inMemoryTaskManager.getEpicById(epic3.getId());
+                inMemoryTaskManager.getTaskById(newTaskData1.getId());
+
+
+
+                for(Object item : inMemoryHistoryManager.getHistory()) {
+                    TaskData itemM = (TaskData) item;
+                    System.out.println("id: " + itemM.getId());
+                }
+
 
             } else if (command == 2) {
                 String epicName = "Победить в чемпионате по поеданию бургеров";
@@ -156,31 +176,7 @@ public class Main {
                 } else {
                     inMemoryTaskManager.updateSubTask(subTaskData);
                 }
-            } else if (command == 10) {
-
-                System.out.println("1 - Получить задачу");
-                System.out.println("2 - Получить эпик");
-                System.out.println("3 - Получить подзадачу");
-                int type = scan.nextInt();
-
-                if (type == 1) {
-                    for (int i = 0; i < 10; i++) {
-                        inMemoryTaskManager.getTaskById(i);
-                        for (TaskData histItem : inMemoryHistoryManager.getHistory()) {
-                            System.out.println((i + 1) + ": " + histItem.getName() + "id: " + histItem.getId());
-                        }
-                    }
-                } else if (type == 2) {
-                    int id = scan.nextInt();
-                    inMemoryTaskManager.getEpicById(id);
-                    inMemoryHistoryManager.getHistory();
-                } else if (type == 3) {
-                    int id = scan.nextInt();
-                    inMemoryTaskManager.getSubTaskById(id);
-                }
-
-
-            } else {
+            }  else {
                 System.out.println("Такой команды нет");
             }
 
@@ -200,7 +196,6 @@ public class Main {
         System.out.println("7 - Получить список подзадач эпика");
         System.out.println("8 - Изменить статус задачи");
         System.out.println("9 - Изменить статус подзадачи эпика");
-        System.out.println("10 - Взять элементы по id");
 
         System.out.println("0 - Выход");
     }
