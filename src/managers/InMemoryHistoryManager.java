@@ -10,28 +10,27 @@ public class InMemoryHistoryManager implements HistoryManager<TaskData> {
     private static CustomLinkedList<TaskData> history = new CustomLinkedList<>();
     private HashMap<Integer, Node<TaskData>> historyMap = new HashMap<>();
 
+    @Override
     public void add(TaskData data) {
-        if (history.size() >= 10) {
-            removeNode(history.getLast());
+        if(historyMap.containsKey(data.getId())) {
+            historyMap.remove(data.getId());
         }
         addToMap(history.linkLast(data));
     }
 
-    void addToMap(Node<TaskData> data) {
-        ArrayList<TaskData> a = new ArrayList<>();
-        a.add(data.item);
-        System.out.println(a);
-        if(!historyMap.containsKey(data.item.getId())) {
+    private void addToMap(Node<TaskData> data) {
+        if (!historyMap.containsKey(data.item.getId())) {
             historyMap.put(data.item.getId(), history.getLast());
         }
     }
 
+    @Override
     public ArrayList<TaskData> getHistory() {
         ArrayList<TaskData> result = new ArrayList<>();
 
         Node<TaskData> node = history.getFirst();
-        for(int i = 0; i < history.size(); i++) {
-            if(!result.contains(node.item)) {
+        for (int i = 0; i < history.size(); i++) {
+            if (!result.contains(node.item)) {
                 result.add(node.item);
                 node = node.next;
             }
@@ -46,51 +45,35 @@ public class InMemoryHistoryManager implements HistoryManager<TaskData> {
     }
 }
 
-class CustomLinkedList<T>{
+class CustomLinkedList<T> {
 
     private int size = 0;
     private Node<T> first;
     private Node<T> last;
 
     Node<T> linkLast(T element) {
-        final Node<T> oldlast = last;
-        final Node<T> newNode = new Node<>(null, element, oldlast);
+        final Node<T> oldLast = last;
+        final Node<T> newNode = new Node<>(null, element, oldLast);
         last = newNode;
 
-        if(oldlast == null) {
+        if (oldLast == null) {
             first = newNode;
-            size++;
-            return first;
+        } else {
+            oldLast.next = newNode;
         }
-        else {
-            oldlast.next = newNode;
-            size++;
-            return newNode;
-        }
-
+        size++;
+        return newNode;
 
     }
 
-     int size() {
+    int size() {
         return size;
-    }
-
-    public ArrayList<T> getTasks() {
-        ArrayList<T> tasks = new ArrayList<>();
-
-        T curElement = first.item;
-        for(int i = 0; i < this.size(); i++) {
-            tasks.add(curElement);
-            Node<T> nextElement = first.next;
-            curElement = nextElement.item;
-        }
-
-        return tasks;
     }
 
     Node<T> getFirst() {
         return first;
     }
+
     Node<T> getLast() {
         return last;
     }
