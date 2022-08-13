@@ -5,22 +5,18 @@ import interfaces.HistoryManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 public class InMemoryHistoryManager implements HistoryManager<TaskData> {
-    private static CustomLinkedList<TaskData> history = new CustomLinkedList<>();
-    private HashMap<Integer, Node<TaskData>> historyMap = new HashMap<>();
+    private final CustomLinkedList<TaskData> history = new CustomLinkedList<>();
+    private final HashMap<Integer, Node<TaskData>> historyMap = new HashMap<>();
 
     @Override
     public void add(TaskData data) {
-        if(historyMap.containsKey(data.getId())) {
-            historyMap.remove(data.getId());
-        }
-        addToMap(history.linkLast(data));
-    }
-
-    private void addToMap(Node<TaskData> data) {
-        if (!historyMap.containsKey(data.item.getId())) {
-            historyMap.put(data.item.getId(), history.getLast());
+        if(data != null) {
+            int id = data.getId();
+            removeNode(historyMap.get(id));
+            historyMap.put(id, history.linkLast(data));
         }
     }
 
@@ -39,9 +35,22 @@ public class InMemoryHistoryManager implements HistoryManager<TaskData> {
         return result;
     }
 
-    @Override
-    public void removeNode(Node<TaskData> node) {
+    private void removeNode(Node<TaskData> node) {
         history.removeNode(node);
+    }
+
+    @Override
+    public void remove(int id) {
+        historyMap.remove(id);
+    }
+
+    @Override
+    public void removeDataType(Set<Integer> dataId) {
+        if(dataId.size() > 0) {
+            for (Integer id : dataId) {
+                historyMap.remove(id);
+            }
+        }
     }
 }
 

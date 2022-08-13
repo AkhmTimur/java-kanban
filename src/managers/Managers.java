@@ -1,5 +1,6 @@
 package managers;
 
+import dataClasses.TaskData;
 import interfaces.HistoryManager;
 import interfaces.TaskManager;
 
@@ -9,7 +10,7 @@ public class Managers {
         return new InMemoryTaskManager();
     }
 
-    public static HistoryManager getHistoryDefault() {
+    public static HistoryManager<TaskData> getHistoryDefault() {
         return new InMemoryHistoryManager();
     }
 }

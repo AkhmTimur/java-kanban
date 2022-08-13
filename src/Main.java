@@ -17,7 +17,7 @@ public class Main {
         Scanner scan = new Scanner(System.in);
 
         TaskManager inMemoryTaskManager = Managers.getDefault();
-        HistoryManager inMemoryHistoryManager = Managers.getHistoryDefault();
+        HistoryManager<TaskData> inMemoryHistoryManager = Managers.getHistoryDefault();
 
         TaskData newTaskData = new TaskData("Победить в чемпионате по поеданию бургеров", "Нужно тренироваться, едим бургеры!");
         inMemoryTaskManager.addToTasks(newTaskData);

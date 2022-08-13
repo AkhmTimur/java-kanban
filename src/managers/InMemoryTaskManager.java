@@ -12,11 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 
 public class InMemoryTaskManager implements TaskManager {
-    private static int nextId = -1;
+    private int nextId = -1;
     private HashMap<Integer, TaskData> tasks = new HashMap<>();
     private HashMap<Integer, EpicData> epics = new HashMap<>();
     private HashMap<Integer, SubTaskData> subTasks = new HashMap<>();
-    private HistoryManager inMemoryHistoryManager = Managers.getHistoryDefault();
+    private HistoryManager<TaskData> inMemoryHistoryManager = Managers.getHistoryDefault();
 
     @Override
     public void addToTasks(TaskData taskData) {
@@ -66,11 +66,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public TaskData deleteTaskById(int id) {
+        inMemoryHistoryManager.remove(id);
         return tasks.remove(id);
     }
 
     @Override
     public void deleteEpicById(int id) {
+        inMemoryHistoryManager.remove(id);
         EpicData epic = epics.remove(id);
         if (epic == null) {
             return;
@@ -82,6 +84,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteSubTaskById(int id) {
+        inMemoryHistoryManager.remove(id);
         SubTaskData subTask = subTasks.remove(id);
         if (subTask == null) {
             return;
@@ -108,17 +111,20 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
+        inMemoryHistoryManager.removeDataType(subTasks.keySet());
         tasks.clear();
     }
 
     @Override
     public void deleteAllEpics() {
+        inMemoryHistoryManager.removeDataType(epics.keySet());
         epics.clear();
         subTasks.clear();
     }
 
     @Override
     public void deleteAllSubTasks() {
+        inMemoryHistoryManager.removeDataType(subTasks.keySet());
         subTasks.clear();
         for (EpicData epicData : epics.values()) {
             epicData.clearSubTaskIdList();
