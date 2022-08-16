@@ -88,25 +88,27 @@ class CustomLinkedList<T> {
     }
 
     void removeNode(Node<T> node) {
-        final Node<T> next = node.next;
-        final Node<T> prev = node.prev;
+        if(node != null) {
+            final Node<T> next = node.next;
+            final Node<T> prev = node.prev;
 
-        if (prev == null) {
-            first = next;
-        } else {
-            prev.next = next;
-            node.prev = null;
+            if (prev == null) {
+                first = next;
+            } else {
+                prev.next = next;
+                node.prev = null;
+            }
+
+            if (next == null) {
+                last = prev;
+            } else {
+                next.prev = prev;
+                node.next = null;
+            }
+
+            node.item = null;
+            size--;
         }
-
-        if (next == null) {
-            last = prev;
-        } else {
-            next.prev = prev;
-            node.next = null;
-        }
-
-        node.item = null;
-        size--;
     }
 
 }
