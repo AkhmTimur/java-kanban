@@ -13,7 +13,7 @@ public class InMemoryHistoryManager implements HistoryManager<TaskData> {
 
     @Override
     public void add(TaskData data) {
-        if(data != null) {
+        if (data != null) {
             int id = data.getId();
             removeNode(historyMap.get(id));
             historyMap.put(id, history.linkLast(data));
@@ -46,7 +46,7 @@ public class InMemoryHistoryManager implements HistoryManager<TaskData> {
 
     @Override
     public void removeDataType(Set<Integer> dataId) {
-        if(dataId.size() > 0) {
+        if (dataId.size() > 0) {
             for (Integer id : dataId) {
                 historyMap.remove(id);
             }
@@ -62,7 +62,7 @@ class CustomLinkedList<T> {
 
     Node<T> linkLast(T element) {
         final Node<T> oldLast = last;
-        final Node<T> newNode = new Node<>(null, element, oldLast);
+        final Node<T> newNode = new Node<>(oldLast, element, null);
         last = newNode;
 
         if (oldLast == null) {
@@ -88,7 +88,7 @@ class CustomLinkedList<T> {
     }
 
     void removeNode(Node<T> node) {
-        if(node != null) {
+        if (node != null) {
             final Node<T> next = node.next;
             final Node<T> prev = node.prev;
 
