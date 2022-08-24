@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import managers.FileBackedTasksManager;
 import managers.Managers;
 
 public class Main {
@@ -176,6 +177,8 @@ public class Main {
                 } else {
                     inMemoryTaskManager.updateSubTask(subTaskData);
                 }
+            } else if (command == 10) {
+
             }  else {
                 System.out.println("Такой команды нет");
             }

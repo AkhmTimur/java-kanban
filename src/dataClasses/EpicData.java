@@ -12,6 +12,11 @@ public class EpicData extends TaskData {
         this.status = status;
     }
 
+    @Override
+    public String print() {
+        return "EPIC";
+    }
+
     public void clearSubTaskIdList() {
         subTaskIdList.clear();
     }
