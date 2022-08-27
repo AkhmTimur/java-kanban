@@ -1,5 +1,6 @@
 package dataClasses;
 
+import enums.DataTypes;
 import enums.Statuses;
 
 import java.util.ArrayList;
@@ -10,6 +11,10 @@ public class EpicData extends TaskData {
     public EpicData(String name, String description, Statuses status) {
         super(name, description);
         this.status = status;
+    }
+
+    public DataTypes getType() {
+        return DataTypes.EPIC;
     }
 
     @Override

@@ -1,5 +1,7 @@
 package dataClasses;
 
+import enums.DataTypes;
+
 import java.util.Objects;
 
 public class SubTaskData extends TaskData {
@@ -15,6 +17,10 @@ public class SubTaskData extends TaskData {
 
     public void setEpicId(Integer epicId) {
         this.epicId = epicId;
+    }
+
+    public DataTypes getType() {
+        return DataTypes.SUBTASK;
     }
 
     @Override

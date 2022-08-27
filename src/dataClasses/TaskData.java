@@ -1,11 +1,11 @@
 package dataClasses;
 
+import enums.DataTypes;
 import enums.Statuses;
-import interfaces.Printable;
 
 import java.util.Objects;
 
-public class TaskData implements Printable {
+public class TaskData {
     private String name;
     private String description;
     private int id;
@@ -33,15 +33,19 @@ public class TaskData implements Printable {
         this.status = status;
     }
 
+    public Statuses getStatus() {
+        return status;
+    }
+
+    public DataTypes getType() {
+        return DataTypes.TASK;
+    }
+
 
     public void setId(int id) {
         this.id = id;
     }
 
-    @Override
-    public String print() {
-        return "TASK";
-    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

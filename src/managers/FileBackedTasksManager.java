@@ -3,6 +3,7 @@ package managers;
 import dataClasses.EpicData;
 import dataClasses.SubTaskData;
 import dataClasses.TaskData;
+import enums.DataTypes;
 import enums.Statuses;
 import interfaces.HistoryManager;
 import interfaces.TaskManager;
@@ -17,12 +18,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FileBackedTasksManager extends InMemoryTaskManager {
-    private static File fileForSave = new File("./src/", "example.csv");
-    private static HistoryManager<TaskData> inMemoryHistoryManager = Managers.getHistoryDefault();
-    private static TaskManager inMemoryTaskManager = Managers.getDefault();
-    private static List<Integer> idHistory = new ArrayList<>();
+    private File fileForSave = new File("./src/", "example.csv");
+    private HistoryManager<TaskData> inMemoryHistoryManager = Managers.getHistoryDefault();
+    private List<Integer> idHistory = new ArrayList<>();
 
     static void main(String[] args) {
+
+        TaskManager inMemoryTaskManager = Managers.getDefault();
+
         TaskData newTaskData = new TaskData("Победить в чемпионате по поеданию бургеров", "Нужно тренироваться, едим бургеры!");
         inMemoryTaskManager.addToTasks(newTaskData);
         TaskData newTaskData1 = new TaskData("Пробежать марафон", "Попробовать свои силы на марафоне который будет осенью");
@@ -68,33 +71,35 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         loadFromFile(fileForSave);
     }
 
-    private void save() {
-        try {
-            Writer fileWriter = new FileWriter(fileForSave, true);
+    private void save() throws ManagerSaveException {
+        try(Writer fileWriter = new FileWriter(fileForSave, true))  {
+            if(!fileForSave.exists()) {
+                throw new ManagerSaveException("Такого файла не существует");
+            }
             fileWriter.write("id,type,name,status,description,epic");
 
-            for(TaskData t: this.getAllTasks()) {
+            for (TaskData t : this.getAllTasks()) {
                 fileWriter.write(toString(t));
             }
-            for(TaskData e: this.getAllEpics()) {
+            for (TaskData e : this.getAllEpics()) {
                 fileWriter.write(toString(e));
             }
-            for(TaskData st: this.getAllSubTasks()) {
+            for (TaskData st : this.getAllSubTasks()) {
                 fileWriter.write(toString(st));
             }
             fileWriter.write("\n");
             fileWriter.write(historyToString(inMemoryHistoryManager));
         } catch (IOException e) {
-            e.getMessage();
+            throw new ManagerSaveException("Произошла ошибка");
         }
     }
 
     private String toString(TaskData taskData) {
         String result;
 
-        result = taskData.getId() + "," +  taskData.print() + "," + taskData.getName() + "," + taskData.status + "," + taskData.getDescription() + ",";
+        result = taskData.getId() + "," + taskData.getType() + "," + taskData.getName() + "," + taskData.getStatus() + "," + taskData.getDescription() + ",";
 
-        if(taskData.print().equals("SUBTASK")) {
+        if (taskData.getType().equals(DataTypes.SUBTASK)) {
             SubTaskData subTask = (SubTaskData) taskData;
             result = result + subTask.getEpicId();
         }
@@ -102,7 +107,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         return result;
     }
 
-    private static void loadFromFile(File file) throws IOException {
+    private void loadFromFile(File file) throws IOException {
         FileReader fr = new FileReader(file);
         BufferedReader br = new BufferedReader(fr);
         String lines = br.readLine();
@@ -110,16 +115,24 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         String[] linesArr = lines.split("\n");
 
         boolean tasksIsOver = false;
-        for(String line: linesArr) {
-            if(!tasksIsOver) {
-                if(line.isBlank()) {
+        for (String line : linesArr) {
+            if (!tasksIsOver) {
+                if (line.isBlank()) {
                     tasksIsOver = true;
                 }
+                TaskData collectedDataItem = fromString(line);
                 String[] lineValues = line.split(",");
-                if(lineValues[1].equals("TASK")) inMemoryTaskManager.addToTasks(fromString(line));
-                else if(lineValues[1].equals("EPIC")) {
-                    inMemoryTaskManager.addToEpics((EpicData) fromString(line));
-                } else inMemoryTaskManager.addToSubTasks((SubTaskData) fromString(line));
+
+                String dataType = lineValues[1];
+
+                if (dataType.equals("TASK")) {
+                    addToTasks(collectedDataItem);
+                }
+                else if (dataType.equals("EPIC")) {
+                    addToEpics((EpicData) collectedDataItem);
+                } else {
+                    addToSubTasks((SubTaskData) collectedDataItem);
+                }
             } else {
                 idHistory.addAll(historyFromString(line));
             }
@@ -130,27 +143,24 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
     private static TaskData fromString(String value) {
         String[] lineValues = value.split(",");
+        String dataType = lineValues[1];
+        String dataName = lineValues[2];
+        String description = lineValues[4];
 
-        if(lineValues[1].equals("TASK")) return new TaskData(lineValues[2], lineValues[4]);
-        else if(lineValues[1].equals("EPIC")) {
+        if (dataType.equals("TASK")) return new TaskData(dataName, description);
+        else if (dataType.equals("EPIC")) {
             EpicData epic;
-            if(lineValues[3].equals("NEW")) {
-                epic = new EpicData(lineValues[2], lineValues[4], Statuses.NEW);
-            } else if(lineValues[3].equals("IN_PROGRESS")) {
-                epic = new EpicData(lineValues[2], lineValues[4], Statuses.IN_PROGRESS);
-            } else {
-                epic = new EpicData(lineValues[2], lineValues[4], Statuses.DONE);
-            }
+            Statuses status = Statuses.valueOf(lineValues[2]);
+            epic = new EpicData(dataName, description, status);
             return epic;
-        } else return new SubTaskData(lineValues[2], lineValues[4]);
+        } else return new SubTaskData(dataName, description);
     }
 
-    private static String historyToString(HistoryManager historyManager) {
+    private static String historyToString(HistoryManager<TaskData> historyManager) {
         String result = "";
 
-        for(Object item : historyManager.getHistory()) {
-            TaskData itemM = (TaskData) item;
-            result = itemM.getId() + ",";
+        for (TaskData item : historyManager.getHistory()) {
+            result = item.getId() + ",";
         }
 
         return result;
@@ -160,7 +170,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         String[] lineValues = value.split(",");
         List<Integer> result = new ArrayList<>();
 
-        for(String v: lineValues) {
+        for (String v : lineValues) {
             result.add(Integer.parseInt(v));
         }
 
@@ -168,23 +178,40 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
 
-
     @Override
     public void addToSubTasks(SubTaskData subTask) {
         super.addToSubTasks(subTask);
-        save();
+        try {
+            save();
+        } catch(ManagerSaveException e) {
+            e.getMessage();
+        }
     }
 
     @Override
     public int addToEpics(EpicData epicData) {
         super.addToEpics(epicData);
-        save();
+        try {
+            save();
+        } catch(ManagerSaveException e) {
+            e.getMessage();
+        }
         return epicData.getId();
     }
 
     @Override
     public void addToTasks(TaskData taskData) {
         super.addToTasks(taskData);
-        save();
+        try {
+            save();
+        } catch(ManagerSaveException e) {
+            e.getMessage();
+        }
+    }
+}
+
+class ManagerSaveException extends IOException {
+     ManagerSaveException(final String message) {
+        super(message);
     }
 }
