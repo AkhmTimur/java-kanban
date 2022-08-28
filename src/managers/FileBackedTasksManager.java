@@ -141,19 +141,30 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
 
-    private static TaskData fromString(String value) {
+    private TaskData fromString(String value) {
         String[] lineValues = value.split(",");
         String dataType = lineValues[1];
         String dataName = lineValues[2];
         String description = lineValues[4];
 
-        if (dataType.equals("TASK")) return new TaskData(dataName, description);
+        if (dataType.equals("TASK")) {
+            return new TaskData(dataName, description);
+        }
         else if (dataType.equals("EPIC")) {
             EpicData epic;
             Statuses status = Statuses.valueOf(lineValues[2]);
             epic = new EpicData(dataName, description, status);
             return epic;
-        } else return new SubTaskData(dataName, description);
+        } else {
+            SubTaskData subTask = new SubTaskData(dataName, description);
+            int epicId = 0;
+            if(lineValues[5] != null) {
+                epicId = Integer.parseInt(lineValues[5]);
+            }
+            subTask.setEpicId(epicId);
+            addSubTaskToEpics(subTask);
+            return subTask;
+        }
     }
 
     private static String historyToString(HistoryManager<TaskData> historyManager) {
@@ -208,6 +219,17 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             e.getMessage();
         }
     }
+
+    @Override
+    protected void addSubTaskToEpics(SubTaskData subTaskData) {
+        super.addSubTaskToEpics(subTaskData);
+        try {
+            save();
+        } catch(ManagerSaveException e) {
+            e.getMessage();
+        }
+    }
+
 }
 
 class ManagerSaveException extends IOException {

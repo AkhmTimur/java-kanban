@@ -42,7 +42,7 @@ public class InMemoryTaskManager implements TaskManager {
         updateEpic(epicData);
     }
 
-    private void addSubTaskToEpics(SubTaskData subTaskData) {
+    protected void addSubTaskToEpics(SubTaskData subTaskData) {
         epics.get(subTaskData.getEpicId()).addSubTask(subTaskData);
     }
 
