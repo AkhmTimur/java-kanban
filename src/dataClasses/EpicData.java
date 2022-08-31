@@ -17,11 +17,6 @@ public class EpicData extends TaskData {
         return DataTypes.EPIC;
     }
 
-    @Override
-    public String print() {
-        return "EPIC";
-    }
-
     public void clearSubTaskIdList() {
         subTaskIdList.clear();
     }

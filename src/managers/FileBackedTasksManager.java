@@ -5,6 +5,7 @@ import dataClasses.SubTaskData;
 import dataClasses.TaskData;
 import enums.DataTypes;
 import enums.Statuses;
+import exceptions.ManagerSaveException;
 import interfaces.HistoryManager;
 import interfaces.TaskManager;
 
@@ -192,48 +193,27 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     @Override
     public void addToSubTasks(SubTaskData subTask) {
         super.addToSubTasks(subTask);
-        try {
-            save();
-        } catch(ManagerSaveException e) {
-            e.getMessage();
-        }
+        save();
     }
 
     @Override
     public int addToEpics(EpicData epicData) {
         super.addToEpics(epicData);
-        try {
-            save();
-        } catch(ManagerSaveException e) {
-            e.getMessage();
-        }
+        save();
         return epicData.getId();
     }
 
     @Override
     public void addToTasks(TaskData taskData) {
         super.addToTasks(taskData);
-        try {
-            save();
-        } catch(ManagerSaveException e) {
-            e.getMessage();
-        }
+        save();
     }
 
     @Override
     protected void addSubTaskToEpics(SubTaskData subTaskData) {
         super.addSubTaskToEpics(subTaskData);
-        try {
-            save();
-        } catch(ManagerSaveException e) {
-            e.getMessage();
-        }
+        save();
     }
 
 }
 
-class ManagerSaveException extends IOException {
-     ManagerSaveException(final String message) {
-        super(message);
-    }
-}
