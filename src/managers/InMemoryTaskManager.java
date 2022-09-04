@@ -13,9 +13,9 @@ import java.util.List;
 
 public class InMemoryTaskManager implements TaskManager {
     private int nextId = -1;
-    private HashMap<Integer, TaskData> tasks = new HashMap<>();
-    private HashMap<Integer, EpicData> epics = new HashMap<>();
-    private HashMap<Integer, SubTaskData> subTasks = new HashMap<>();
+    HashMap<Integer, TaskData> tasks = new HashMap<>();
+    HashMap<Integer, EpicData> epics = new HashMap<>();
+    HashMap<Integer, SubTaskData> subTasks = new HashMap<>();
     private HistoryManager<TaskData> inMemoryHistoryManager = Managers.getHistoryDefault();
 
     @Override
@@ -181,7 +181,7 @@ public class InMemoryTaskManager implements TaskManager {
         return null;
     }
 
-    private int genID() {
+    int genID() {
         nextId++;
         return nextId;
     }

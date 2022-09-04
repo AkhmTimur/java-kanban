@@ -11,6 +11,10 @@ public class SubTaskData extends TaskData {
         super(name, description);
     }
 
+    public SubTaskData(String name, String description, int id) {
+        super(name, description, id);
+    }
+
     public Integer getEpicId() {
         return epicId;
     }

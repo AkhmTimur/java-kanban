@@ -17,6 +17,13 @@ public class TaskData {
         this.status = Statuses.NEW;
     }
 
+    public TaskData(String name, String description, int id) {
+        this.name = name;
+        this.description = description;
+        this.id = id;
+        this.status = Statuses.NEW;
+    }
+
     public int getId() {
         return id;
     }
