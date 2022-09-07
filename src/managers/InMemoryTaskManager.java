@@ -12,11 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 
 public class InMemoryTaskManager implements TaskManager {
-    private int nextId = -1;
+    protected int nextId = -1;
     HashMap<Integer, TaskData> tasks = new HashMap<>();
     HashMap<Integer, EpicData> epics = new HashMap<>();
     HashMap<Integer, SubTaskData> subTasks = new HashMap<>();
-    private HistoryManager<TaskData> inMemoryHistoryManager = Managers.getHistoryDefault();
+    protected HistoryManager<TaskData> inMemoryHistoryManager = Managers.getHistoryDefault();
 
     @Override
     public void addToTasks(TaskData taskData) {
@@ -174,6 +174,10 @@ public class InMemoryTaskManager implements TaskManager {
         } else {
             epics.get(id).setStatus(Statuses.IN_PROGRESS);
         }
+    }
+
+    public int getNextId() {
+        return nextId;
     }
 
     @Override

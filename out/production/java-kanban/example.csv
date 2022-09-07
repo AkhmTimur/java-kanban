@@ -6,3 +6,4 @@ id,type,name,status,description,epic
 4,SUBTASK,Собрать вещи,NEW,Собирать вещи, 3
 5,SUBTASK,Собрать вещи2,NEW,Собирать вещи2, 3
 6,SUBTASK,Собрать вещи3,NEW,Собирать вещи3, 3
+2,3,0,1,6,5,4
