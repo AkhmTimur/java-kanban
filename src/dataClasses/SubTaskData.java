@@ -1,6 +1,7 @@
 package dataClasses;
 
 import enums.DataTypes;
+import enums.Statuses;
 
 import java.util.Objects;
 
@@ -11,8 +12,8 @@ public class SubTaskData extends TaskData {
         super(name, description);
     }
 
-    public SubTaskData(String name, String description, int id) {
-        super(name, description, id);
+    public SubTaskData(String name, String description, int id, Statuses status) {
+        super(name, description, id, status);
     }
 
     public Integer getEpicId() {

@@ -13,9 +13,8 @@ public class EpicData extends TaskData {
         this.status = status;
     }
 
-    public EpicData(String name, String description, Statuses status, int id) {
-        super(name, description, id);
-        this.status = status;
+    public EpicData(String name, String description, int id, Statuses status) {
+        super(name, description, id, status);
     }
 
     public DataTypes getType() {

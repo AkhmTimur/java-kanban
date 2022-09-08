@@ -17,11 +17,11 @@ public class TaskData {
         this.status = Statuses.NEW;
     }
 
-    public TaskData(String name, String description, int id) {
+    public TaskData(String name, String description, int id, Statuses status) {
         this.name = name;
         this.description = description;
         this.id = id;
-        this.status = Statuses.NEW;
+        this.status = status;
     }
 
     public int getId() {
