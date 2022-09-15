@@ -3,6 +3,9 @@ package dataClasses;
 import enums.DataTypes;
 import enums.Statuses;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class TaskData {
@@ -10,6 +13,8 @@ public class TaskData {
     private String description;
     private int id;
     public Statuses status;
+    private Duration duration;
+    private LocalDateTime startDate;
 
     public TaskData(String name, String description) {
         this.name = name;
@@ -51,6 +56,34 @@ public class TaskData {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public void setDuration(long minutes) {
+        duration = Duration.ofMinutes(minutes);
+    }
+
+    public void setDuration(LocalDateTime endTime) {
+        duration = Duration.between(this.startDate, endTime);
+    }
+
+    public void setStartDate(int year, int month, int day) {
+        startDate = LocalDateTime.of(year, month, day, 0, 0);
+    }
+
+    public void setStartDate(LocalDateTime dateTime) {
+        startDate = dateTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return startDate.plus(duration);
+    }
+
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
+
+    public Duration getDuration() {
+        return duration;
     }
 
     @Override

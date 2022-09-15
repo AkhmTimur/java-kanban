@@ -23,9 +23,9 @@ public interface TaskManager {
 
     TaskData deleteTaskById(int id);
 
-    void deleteEpicById(int id);
+    EpicData deleteEpicById(int id);
 
-    void deleteSubTaskById(int id);
+    SubTaskData deleteSubTaskById(int id);
 
     ArrayList<TaskData> getAllTasks();
 
@@ -45,5 +45,4 @@ public interface TaskManager {
 
     void updateSubTask(SubTaskData subTaskData);
 
-    List<TaskData> getHistory();
 }
