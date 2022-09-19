@@ -40,6 +40,7 @@ public class InMemoryHistoryManager implements HistoryManager<TaskData> {
 
     @Override
     public void remove(int id) {
+        history.removeNode(historyMap.get(id));
         historyMap.remove(id);
     }
 
@@ -47,7 +48,7 @@ public class InMemoryHistoryManager implements HistoryManager<TaskData> {
     public void removeDataType(Set<Integer> dataId) {
         if (dataId.size() > 0) {
             for (Integer id : dataId) {
-                historyMap.remove(id);
+                remove(id);
             }
         }
     }

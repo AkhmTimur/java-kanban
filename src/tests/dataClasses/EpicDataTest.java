@@ -1,9 +1,12 @@
-package dataClasses;
+package tests.dataClasses;
 
+import dataClasses.EpicData;
+import dataClasses.SubTaskData;
 import enums.Statuses;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,9 +16,10 @@ class EpicDataTest {
 
     static EpicData epic;
     static SubTaskData subtask1;
+    private LocalDateTime endTime;
 
     @BeforeEach
-    public static void createSomething() {
+    public void createSomething() {
         epic = new EpicData("epicName", "description", 0, Statuses.NEW);
         subtask1 = new SubTaskData("epicName", "description", 1, Statuses.NEW);
         epic.addSubTask(subtask1);
@@ -46,6 +50,10 @@ class EpicDataTest {
         assertEquals(List.of(1), epic.getSubTaskIdList());
     }
 
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
     @Test
     public void clearSubTaskIdListTest() {
         epic.clearSubTaskIdList();

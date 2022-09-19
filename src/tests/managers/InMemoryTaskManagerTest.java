@@ -1,9 +1,9 @@
-package managers;
+package tests.managers;
 
 import dataClasses.EpicData;
 import dataClasses.SubTaskData;
 import enums.Statuses;
-import interfaces.TaskManager;
+import managers.InMemoryTaskManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

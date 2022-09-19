@@ -21,6 +21,8 @@ public interface TaskManager {
 
     SubTaskData getSubTaskById(int id);
 
+    List<TaskData> getPrioritizedTasks();
+
     TaskData deleteTaskById(int id);
 
     EpicData deleteEpicById(int id);
@@ -45,4 +47,5 @@ public interface TaskManager {
 
     void updateSubTask(SubTaskData subTaskData);
 
+    List<Integer> getHistory();
 }

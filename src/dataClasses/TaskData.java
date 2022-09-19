@@ -12,7 +12,7 @@ public class TaskData {
     private String name;
     private String description;
     private int id;
-    public Statuses status;
+    protected Statuses status;
     private Duration duration;
     private LocalDateTime startDate;
 
@@ -53,27 +53,6 @@ public class TaskData {
         return DataTypes.TASK;
     }
 
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setDuration(long minutes) {
-        duration = Duration.ofMinutes(minutes);
-    }
-
-    public void setDuration(LocalDateTime endTime) {
-        duration = Duration.between(this.startDate, endTime);
-    }
-
-    public void setStartDate(int year, int month, int day) {
-        startDate = LocalDateTime.of(year, month, day, 0, 0);
-    }
-
-    public void setStartDate(LocalDateTime dateTime) {
-        startDate = dateTime;
-    }
-
     public LocalDateTime getEndTime() {
         return startDate.plus(duration);
     }
@@ -84,6 +63,34 @@ public class TaskData {
 
     public Duration getDuration() {
         return duration;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setDuration(long minutes) {
+        duration = Duration.ofMinutes(minutes);
+    }
+
+    public void setStartDate(int year, int month, int day) {
+        startDate = LocalDateTime.of(year, month, day, 0, 0);
+    }
+
+    public void setStartDate(LocalDateTime dateTime) {
+        startDate = dateTime;
+    }
+
+    public void calcDurationByEndTime(LocalDateTime endTime) {
+        duration = Duration.between(this.startDate, endTime);
     }
 
     @Override

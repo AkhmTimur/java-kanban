@@ -3,10 +3,13 @@ package dataClasses;
 import enums.DataTypes;
 import enums.Statuses;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class EpicData extends TaskData {
     private ArrayList<Integer> subTaskIdList = new ArrayList<>();
+    private LocalDateTime endTime;
 
     public EpicData(String name, String description, Statuses status) {
         super(name, description);
@@ -17,6 +20,9 @@ public class EpicData extends TaskData {
         super(name, description, id, status);
     }
 
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
     public DataTypes getType() {
         return DataTypes.EPIC;
     }

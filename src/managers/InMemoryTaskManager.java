@@ -4,6 +4,7 @@ import dataClasses.EpicData;
 import dataClasses.SubTaskData;
 import dataClasses.TaskData;
 import enums.Statuses;
+import exceptions.TaskValidationException;
 import interfaces.HistoryManager;
 import interfaces.TaskManager;
 
@@ -12,14 +13,12 @@ import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
     protected int nextId = -1;
-    HashMap<Integer, TaskData> tasks = new HashMap<>();
-    HashMap<Integer, EpicData> epics = new HashMap<>();
-    HashMap<Integer, SubTaskData> subTasks = new HashMap<>();
+    protected final HashMap<Integer, TaskData> tasks = new HashMap<>();
+    protected final HashMap<Integer, EpicData> epics = new HashMap<>();
+    protected final HashMap<Integer, SubTaskData> subTasks = new HashMap<>();
 
     Comparator<TaskData> byStartTime = (TaskData t1, TaskData t2) -> {
-        int result1 = t1.getStartDate().compareTo(t2.getStartDate());
-        int result2 =  t2.getStartDate().compareTo(t1.getEndTime());
-        return result1 * result2;
+        return t1.getStartDate().compareTo(t2.getStartDate());
     };
 
     TreeSet<TaskData> prioritizedTasks = new TreeSet<>(byStartTime);
@@ -28,7 +27,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void addToTasks(TaskData taskData) {
         taskData.setId(genID());
-        addToSetAndValidation(taskData);
+        addToSetValidation(taskData);
         tasks.put(taskData.getId(), taskData);
     }
 
@@ -47,43 +46,32 @@ public class InMemoryTaskManager implements TaskManager {
         EpicData epicData = epics.get(subTaskData.getEpicId());
         epicData.addSubTask(subTaskData);
         if (subTaskData.getStartDate() != null) {
-            addToSetAndValidation(subTaskData);
-            prioritizedTasks.add(subTaskData);
-            int year = subTaskData.getStartDate().getYear();
-            int month = subTaskData.getStartDate().getMonthValue();
-            int day = subTaskData.getStartDate().getDayOfMonth();
-            if (epicData.getStartDate() != null && epicData.getDuration() != null) {
-                if (subTaskData.getStartDate().isBefore(epicData.getStartDate())) {
-                    epicData.setStartDate(year, month, day);
-                } else if (subTaskData.getEndTime().isAfter(epicData.getEndTime())) {
-                    epicData.setDuration(Duration.between(epicData.getStartDate(), subTaskData.getEndTime()).toMinutes());
-                }
-            } else {
-                epicData.setStartDate(year, month, day);
-                epicData.setDuration(Duration.between(subTaskData.getStartDate(), subTaskData.getEndTime()).toMinutes());
-            }
+            addToSetValidation(subTaskData);
+            updateEpicTemporaryParams(epicData, subTaskData);
         }
-
         updateEpicStatus(epicData.getId());
-        updateEpic(epicData);
     }
 
-    protected void addSubTaskToEpics(SubTaskData subTaskData) {
-        epics.get(subTaskData.getEpicId()).addSubTask(subTaskData);
-    }
-
-    void addToSetAndValidation(TaskData taskData) {
-        if(taskData.getStartDate() != null) {
-            prioritizedTasks.add(taskData);
-            if(!prioritizedTasks.contains(taskData)) {
-                System.out.println("Задача " + taskData.getName() + " пересекается с другой задачей по времени.");
+    void addToSetValidation(TaskData taskData) {
+        TaskData taskToAdd = null;
+        for (TaskData prioritizedTask : prioritizedTasks) {
+            if(taskData.getEndTime().isBefore(prioritizedTask.getStartDate()) ||
+                    taskData.getStartDate().isAfter(prioritizedTask.getEndTime())) {
+                taskToAdd = taskData;
+            } else {
+                throw new TaskValidationException("Задача " + taskData.getName() + " пересекается с другой задачей по времени.");
             }
+        }
+        if(taskToAdd != null) {
+            prioritizedTasks.add(taskToAdd);
         }
     }
 
-    Set<TaskData> getPrioritizedTasks() {
-        return prioritizedTasks;
+    @Override
+    public List<TaskData> getPrioritizedTasks() {
+        return new ArrayList<>(prioritizedTasks);
     }
+
     @Override
     public TaskData getTaskById(int id) {
         inMemoryHistoryManager.add(tasks.get(id));
@@ -105,6 +93,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public TaskData deleteTaskById(int id) {
         inMemoryHistoryManager.remove(id);
+        prioritizedTasks.remove(getTaskById(id));
         return tasks.remove(id);
     }
 
@@ -118,13 +107,15 @@ public class InMemoryTaskManager implements TaskManager {
         for (Integer subTaskId : epic.getSubTaskIdList()) {
             inMemoryHistoryManager.remove(subTaskId);
             subTasks.remove(subTaskId);
+            prioritizedTasks.remove(getSubTaskById(subTaskId));
         }
-        return epics.remove(id);
+        return epic;
     }
 
     @Override
     public SubTaskData deleteSubTaskById(int id) {
         inMemoryHistoryManager.remove(id);
+        prioritizedTasks.remove(getSubTaskById(id));
         SubTaskData subTask = subTasks.remove(id);
         if (subTask == null) {
             return null;
@@ -152,20 +143,32 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
-        inMemoryHistoryManager.removeDataType(subTasks.keySet());
+        inMemoryHistoryManager.removeDataType(tasks.keySet());
+        for (TaskData task : tasks.values()) {
+            prioritizedTasks.remove(task);
+        }
         tasks.clear();
     }
 
     @Override
     public void deleteAllEpics() {
         inMemoryHistoryManager.removeDataType(epics.keySet());
+        for (EpicData epic : epics.values()) {
+            prioritizedTasks.remove(epic);
+        }
         epics.clear();
+        for (SubTaskData subTask : subTasks.values()) {
+            prioritizedTasks.remove(subTask);
+        }
         subTasks.clear();
     }
 
     @Override
     public void deleteAllSubTasks() {
         inMemoryHistoryManager.removeDataType(subTasks.keySet());
+        for (SubTaskData subTask : subTasks.values()) {
+            prioritizedTasks.remove(subTask);
+        }
         subTasks.clear();
         for (EpicData epicData : epics.values()) {
             epicData.clearSubTaskIdList();
@@ -175,50 +178,80 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateTask(TaskData taskData) {
-        tasks.put(taskData.getId(), taskData);
+        TaskData task = tasks.get(taskData.getId());
+        if (task != null) {
+            tasks.put(taskData.getId(), taskData);
+            prioritizedTasks.remove(task);
+            addToSetValidation(taskData);
+        }
     }
 
     @Override
     public void updateEpic(EpicData epicData) {
-        epics.put(epicData.getId(), epicData);
+        EpicData savedEpic = epics.get(epicData.getId());
+        savedEpic.setName(epicData.getName());
+        savedEpic.setDescription(epicData.getDescription());
     }
 
     @Override
     public void updateSubTask(SubTaskData subTaskData) {
-        subTasks.put(subTaskData.getId(), subTaskData);
-        int epicId = subTaskData.getEpicId();
-        updateEpicStatus(epicId);
+        SubTaskData subTask = subTasks.get(subTaskData.getId());
+        if(subTask != null) {
+            subTasks.put(subTaskData.getId(), subTaskData);
+            prioritizedTasks.remove(subTask);
+            addToSetValidation(subTaskData);
+            int epicId = subTaskData.getEpicId();
+            updateEpicStatus(epicId);
+        }
     }
 
-    void updateEpicStatus(int id) {
-        ArrayList<Statuses> subTasksStatuses = new ArrayList<>();
-        ArrayList<Statuses> uniqueStatuses = new ArrayList<>();
-
-        for (SubTaskData subTask : subTasks.values()) {
-            if (subTask.getEpicId() == id) {
-                subTasksStatuses.add(subTask.status);
-            }
+    public void updateEpicStatus(int id) {
+        Set<Statuses> uniqueStatuses = new HashSet<>();
+        EpicData epicData = epics.get(id);
+        for (Integer subTaskId : epicData.getSubTaskIdList()) {
+            uniqueStatuses.add(subTasks.get(subTaskId).getStatus());
         }
-
-        for (Statuses subTasksStatus : subTasksStatuses) {
-            if (!uniqueStatuses.contains(subTasksStatus)) {
-                uniqueStatuses.add(subTasksStatus);
-            }
-        }
-
-        if (epics.get(id).getSubTaskIdList().size() == 0 ||
-                (uniqueStatuses.size() == 1 && uniqueStatuses.get(0) == Statuses.NEW)) {
-            epics.get(id).setStatus(Statuses.NEW);
-        } else if (uniqueStatuses.size() == 1 && uniqueStatuses.get(0) == Statuses.DONE) {
-            epics.get(id).setStatus(Statuses.DONE);
+        if (epicData.getSubTaskIdList().size() == 0 ||
+                (uniqueStatuses.size() == 1 && uniqueStatuses.contains(Statuses.NEW))) {
+            epicData.setStatus(Statuses.NEW);
+        } else if (uniqueStatuses.size() == 1 && uniqueStatuses.contains(Statuses.DONE)) {
+            epicData.setStatus(Statuses.DONE);
         } else {
-            epics.get(id).setStatus(Statuses.IN_PROGRESS);
+            epicData.setStatus(Statuses.IN_PROGRESS);
         }
     }
 
+    private void updateEpicTemporaryParams(EpicData epicData, SubTaskData subTaskData) {
+        if(epicData.getStartDate() == null && subTaskData.getStartDate() != null) {
+            epicData.setStartDate(subTaskData.getStartDate());
+        } else if (subTaskData.getStartDate().isBefore(epicData.getStartDate())) {
+            epicData.setStartDate(subTaskData.getStartDate());
+        }  else if (subTaskData.getEndTime().isAfter(epicData.getEndTime())) {
+            epicData.setEndTime(subTaskData.getEndTime());
+        }
+        if(epicData.getDuration() == null && subTaskData.getDuration() != null) {
+            epicData.setDuration(subTaskData.getDuration().toMinutes());
+        } else {
+            long epicDuration = epicData.getDuration().toMinutes();
+            epicDuration += subTaskData.getDuration().toMinutes();
+            epicData.setDuration(epicDuration);
+        }
+    }
 
-    int genID() {
+    private long calcEpicDuration(EpicData epic) {
+        long result = 0;
+        for (Integer subTaskId : epic.getSubTaskIdList()) {
+            result += getSubTaskById(subTaskId).getDuration().toMinutes();
+        }
+        return result;
+    }
+
+    private int genID() {
         nextId++;
         return nextId;
+    }
+
+    public List<Integer> getHistory() {
+        return null;
     }
 }

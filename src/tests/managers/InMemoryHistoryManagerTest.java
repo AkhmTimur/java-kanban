@@ -1,8 +1,9 @@
-package managers;
+package tests.managers;
 
 import dataClasses.TaskData;
 import interfaces.HistoryManager;
 import interfaces.TaskManager;
+import managers.Managers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -116,13 +117,13 @@ class InMemoryHistoryManagerTest {
         inMemoryTaskManager.addToTasks(task);
         inMemoryTaskManager.addToTasks(task1);
         inMemoryTaskManager.addToTasks(task2);
-        inMemoryTaskManager.getTaskById(task2.getId());
-        inMemoryTaskManager.getTaskById(task.getId());
-        inMemoryTaskManager.getTaskById(task1.getId());
+        inMemoryHistoryManager.add(task2);
+        inMemoryHistoryManager.add(task1);
+        inMemoryHistoryManager.add(task);
 
         inMemoryHistoryManager.remove(2);
 
-        assertEquals(List.of(task, task1), inMemoryHistoryManager.getHistory());
+        assertEquals(List.of(task1, task), inMemoryHistoryManager.getHistory());
     }
 
     @Test
@@ -132,11 +133,11 @@ class InMemoryHistoryManagerTest {
         inMemoryTaskManager.addToTasks(task1);
         inMemoryTaskManager.addToTasks(task);
         inMemoryTaskManager.addToTasks(task2);
-        inMemoryTaskManager.getTaskById(task2.getId());
-        inMemoryTaskManager.getTaskById(task1.getId());
-        inMemoryTaskManager.getTaskById(task.getId());
+        inMemoryHistoryManager.add(task2);
+        inMemoryHistoryManager.add(task1);
+        inMemoryHistoryManager.add(task);
 
-        inMemoryHistoryManager.remove(1);
+        inMemoryHistoryManager.remove(0);
 
         assertEquals(List.of(task2, task), inMemoryHistoryManager.getHistory());
 
@@ -149,11 +150,11 @@ class InMemoryHistoryManagerTest {
         inMemoryTaskManager.addToTasks(task1);
         inMemoryTaskManager.addToTasks(task);
         inMemoryTaskManager.addToTasks(task2);
-        inMemoryTaskManager.getTaskById(task2.getId());
-        inMemoryTaskManager.getTaskById(task1.getId());
-        inMemoryTaskManager.getTaskById(task.getId());
+        inMemoryHistoryManager.add(task2);
+        inMemoryHistoryManager.add(task1);
+        inMemoryHistoryManager.add(task);
 
-        inMemoryHistoryManager.remove(0);
+        inMemoryHistoryManager.remove(1);
 
         assertEquals(List.of(task2, task1), inMemoryHistoryManager.getHistory());
     }

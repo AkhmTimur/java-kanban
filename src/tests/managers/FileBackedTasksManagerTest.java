@@ -1,4 +1,4 @@
-package managers;
+package tests.managers;
 
 import dataClasses.EpicData;
 import dataClasses.SubTaskData;
@@ -6,6 +6,8 @@ import dataClasses.TaskData;
 import enums.Statuses;
 import exceptions.ManagerSaveException;
 import interfaces.HistoryManager;
+import managers.FileBackedTasksManager;
+import managers.Managers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,34 +49,31 @@ class FileBackedTasksManagerTest {
         epic0 = new EpicData("Переехать", "Что-то сделать в процессе", Statuses.NEW);
         subT1 = new SubTaskData("Собрать вещи", "Собирать вещи");
         subT2 = new SubTaskData("Собрать вещи2", "Собирать вещи2");
-
     }
 
     @Test
     void emptyTasksSaveTest() {
-        assertEquals(0, fileManager.getAllTasks().size());
+        File file = new File("./src/", "test.csv");
+        FileBackedTasksManager fileBackedTasksManager = new FileBackedTasksManager(file);
+        assertEquals(0, fileBackedTasksManager.getAllTasks().size());
 
-        fileManager.addToTasks(task);
+        fileBackedTasksManager.addToTasks(task);
 
-        assertEquals(task, fileManager.getTaskById(0));
+        assertEquals(task, fileBackedTasksManager.getTaskById(0));
     }
 
     @Test
     void emptyTasksLoadTest() {
-        /*Не знаю как решить вопрос изначальным заполнением файл менеджера при инициации его объекта.
-         Менеджер изначально заполняется всем типами данных.
-         Поэтому руками очищал файл и комментил добавление в классе FileBackedTasksManager*/
-        /*В голову пришла только идея проверки, когда я комменчу код в самом менеджере. Аналогично для остальных load
-        методов*/
-
-        assertEquals(0, fileManager.getAllTasks().size());
+        File file = new File("./src/", "test.csv");
+        FileBackedTasksManager fileBackedTasksManager = new FileBackedTasksManager(file);
+        assertEquals(0, fileBackedTasksManager.getAllTasks().size());
     }
 
     @Test
     void epicWithOutSubtasksSaveTest() {
-        assertEquals(0, fileManager.getAllEpics().size());
-
+        fileManager.deleteAllEpics();
         fileManager.addToEpics(epic0);
+        assertEquals(0, fileManager.getEpicById(epic0.getId()).getSubTaskIdList().size());
 
         assertEquals(0, epic0.getSubTaskIdList().size());
         assertEquals(1, fileManager.getAllEpics().size());
@@ -89,17 +88,24 @@ class FileBackedTasksManagerTest {
 
     @Test
     void emptyHistorySaveTest() {
+        File file = new File("./src/", "test.csv");
+        FileBackedTasksManager fileBackedTasksManager = new FileBackedTasksManager(file);
         assertEquals(0, historyManager.getHistory().size());
+        fileBackedTasksManager.addToEpics(epic0);
 
-        historyManager.add(fileManager.getEpicById(2));
+        historyManager.add(fileBackedTasksManager.getEpicById(epic0.getId()));
 
         assertEquals(1, historyManager.getHistory().size());
     }
 
     @Test
     void emptyHistoryLoadTest() {
-        assertEquals(0, fileManager.getHistory().size());
+        assertEquals(0, historyManager.getHistory().size());
 
+        File file = new File("./src/", "example.csv");
+        FileBackedTasksManager fileBackedTasksManager = new FileBackedTasksManager(file);
+
+        assertEquals(6, fileBackedTasksManager.getHistory().size());
     }
 
     @Test
