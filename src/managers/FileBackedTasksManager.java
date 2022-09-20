@@ -26,9 +26,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class FileBackedTasksManager extends InMemoryTaskManager {
-    public File fileForSave = new File("./src/", "example.csv");
-    private List<Integer> idHistory = new ArrayList<>();
+    private File fileForSave = new File("./src/", "example.csv");
     private boolean isTasksRead = false;
+    HistoryManager<TaskData> historyManager = Managers.getHistoryDefault();
 
     public static void main(String[] args) {
 
@@ -44,12 +44,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             SubTaskData subT2 = new SubTaskData("Собрать вещи2", "Собирать вещи2");
             SubTaskData subT3 = new SubTaskData("Собрать вещи3", "Собирать вещи3");
 
-
-            newTaskData.setDuration(120);
-            newTaskData.setStartDate(2022, 2, 24);
-            newTaskData1.setDuration(500);
-            newTaskData1.setStartDate(2022, 3, 24);
-
             fileManager.addToTasks(newTaskData);
             fileManager.addToTasks(newTaskData1);
             fileManager.addToEpics(epic0);
@@ -58,14 +52,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             subT1.setEpicId(epic3.getId());
             subT2.setEpicId(epic3.getId());
             subT3.setEpicId(epic3.getId());
-
-            subT1.setDuration(120);
-            subT1.setStartDate(2022, 4, 24);
-            subT2.setDuration(500);
-            subT2.setStartDate(2022, 5, 24);
-            subT3.setDuration(500);
-            subT3.setStartDate(2022, 5, 25);
-
 
             fileManager.addToSubTasks(subT1);
             fileManager.addToSubTasks(subT2);
@@ -93,8 +79,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
     public FileBackedTasksManager(File file) {
-        loadFromFile(file);
+        this.fileForSave = file;
     }
+
     private void save() throws ManagerSaveException {
         try (Writer fileWriter = new FileWriter(fileForSave)) {
             fileWriter.write("id,type,name,status,description,startDate,endDate,epic" + "\n");
@@ -148,14 +135,13 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
             while (line != null) {
                 if (line.length() > 0) {
-                    TaskData collectedDataItem = fromString(line);
-                    String[] lineValues = line.split(",");
-                    String dataType = lineValues[1];
-                    if (collectedDataItem != null && collectedDataItem.getId() > nextId) {
-                        nextId = collectedDataItem.getId();
-                    }
-
                     if(!isTasksRead) {
+                        TaskData collectedDataItem = fromString(line);
+                        String[] lineValues = line.split(",");
+                        String dataType = lineValues[1];
+                        if (collectedDataItem != null && collectedDataItem.getId() > nextId) {
+                            nextId = collectedDataItem.getId();
+                        }
                         switch (dataType) {
                             case "TASK":
                                 tasks.put(collectedDataItem.getId(), collectedDataItem);
@@ -168,7 +154,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                                 break;
                         }
                     } else {
-                        idHistory.addAll(historyFromString(line));
+                        for (TaskData dataItem : convertIdToData(historyFromString(line))) {
+                            historyManager.add(dataItem);
+                        }
                     }
                 } else {
                     isTasksRead = true;
@@ -188,7 +176,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         String dataType = lineValues[1];
         String dataName = lineValues[2];
         String description = lineValues[4];
-        Statuses status = Statuses.NEW;
+        Statuses status = null;
 
         LocalDateTime taskStart = LocalDateTime.now();
         LocalDateTime taskEndTime = LocalDateTime.now();
@@ -249,8 +237,18 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         return result;
     }
 
-    public List<Integer> getHistory() {
-        return idHistory;
+    ArrayList<TaskData> convertIdToData(ArrayList<Integer> historyList) {
+        ArrayList<TaskData> result = new ArrayList<>();
+        for (Integer id : historyList) {
+            if(getTaskById(id) != null) {
+                result.add(getTaskById(id));
+            } else if(getEpicById(id) != null) {
+                result.add(getEpicById(id));
+            } else if(getSubTaskById(id) != null){
+                result.add(getSubTaskById(id));
+            }
+        }
+        return result;
     }
 
     @Override
@@ -271,7 +269,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         save();
     }
 
-    public void addSubTaskToEpics(SubTaskData subTaskData) {
+    private void addSubTaskToEpics(SubTaskData subTaskData) {
         epics.get(subTaskData.getEpicId()).addSubTask(subTaskData);
     }
 

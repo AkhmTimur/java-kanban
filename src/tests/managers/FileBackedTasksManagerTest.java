@@ -122,8 +122,6 @@ class FileBackedTasksManagerTest {
         subT2.setDuration(240);
         subT2.setStartDate(2022, 3, 24);
 
-        fileManager.addSubTaskToEpics(subT1);
-        fileManager.addSubTaskToEpics(subT2);
         fileManager.addToSubTasks(subT1);
         fileManager.addToSubTasks(subT2);
 
