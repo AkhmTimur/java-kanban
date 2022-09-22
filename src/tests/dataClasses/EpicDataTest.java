@@ -67,60 +67,6 @@ class EpicDataTest {
     }
 
     @Test
-    void epicStatusWithEmptySubtasks() {
-        inMemoryTaskManager.addToEpics(epic);
-        inMemoryTaskManager.updateEpicStatus(epic.getId());
-
-        assertEquals(Statuses.NEW, epic.getStatus());
-    }
-
-    @Test
-    void epicStatusWithNewSubtasks() {
-        SubTaskData subtask = new SubTaskData("subtaskName", "desc");
-        inMemoryTaskManager.addToEpics(epic);
-        subtask.setEpicId(epic.getId());
-        inMemoryTaskManager.addToSubTasks(subtask);
-
-        assertEquals(Statuses.NEW, epic.getStatus());
-    }
-
-    @Test
-    void epicStatusWithDoneSubtasks() {
-        inMemoryTaskManager.addToEpics(epic);
-        SubTaskData subtask = new SubTaskData("subtaskName", "desc");
-        subtask.setEpicId(epic.getId());
-        subtask.setStatus(Statuses.DONE);
-        inMemoryTaskManager.addToSubTasks(subtask);
-
-        assertEquals(Statuses.DONE, epic.getStatus());
-    }
-
-    @Test
-    void epicStatusWithNewAndDoneStatus() {
-        inMemoryTaskManager.addToEpics(epic);
-        SubTaskData subtask = new SubTaskData("subtaskName", "desc");
-        subtask.setEpicId(epic.getId());
-        inMemoryTaskManager.addToSubTasks(subtask);
-        SubTaskData subtask1 = new SubTaskData("subtaskName1", "desc");
-        subtask1.setEpicId(epic.getId());
-        subtask1.setStatus(Statuses.DONE);
-        inMemoryTaskManager.addToSubTasks(subtask1);
-
-        assertEquals(Statuses.IN_PROGRESS, epic.getStatus());
-    }
-
-    @Test
-    void epicStatusWithInProgressSubtasks() {
-        inMemoryTaskManager.addToEpics(epic);
-        SubTaskData subtask = new SubTaskData("subtaskName", "desc");
-        subtask.setEpicId(epic.getId());
-        subtask.setStatus(Statuses.IN_PROGRESS);
-        inMemoryTaskManager.addToSubTasks(subtask);
-
-        assertEquals(Statuses.IN_PROGRESS, epic.getStatus());
-    }
-
-    @Test
     void epicDurationWhenAddSubTasksTest() {
         inMemoryTaskManager.addToEpics(epic);
         inMemoryTaskManager.deleteAllSubTasks();

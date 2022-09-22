@@ -114,6 +114,12 @@ class InMemoryHistoryManagerTest {
     void deleteFromStartOfHistory() {
         TaskData task1 = new TaskData("task1", "desc");
         TaskData task2 = new TaskData("task2", "desc");
+        task.setDuration(120);
+        task.setStartDate(2022, 2, 24);
+        task1.setDuration(240);
+        task1.setStartDate(2022, 3, 24);
+        task2.setDuration(500);
+        task2.setStartDate(2022, 5, 24);
         inMemoryTaskManager.addToTasks(task);
         inMemoryTaskManager.addToTasks(task1);
         inMemoryTaskManager.addToTasks(task2);
@@ -130,6 +136,12 @@ class InMemoryHistoryManagerTest {
     void deleteFromMiddleOfHistory() {
         TaskData task1 = new TaskData("task1", "desc");
         TaskData task2 = new TaskData("task2", "desc");
+        task.setDuration(120);
+        task.setStartDate(2022, 2, 24);
+        task1.setDuration(240);
+        task1.setStartDate(2022, 3, 24);
+        task2.setDuration(500);
+        task2.setStartDate(2022, 5, 24);
         inMemoryTaskManager.addToTasks(task1);
         inMemoryTaskManager.addToTasks(task);
         inMemoryTaskManager.addToTasks(task2);
@@ -147,6 +159,12 @@ class InMemoryHistoryManagerTest {
     void deleteFromEndOfHistory() {
         TaskData task1 = new TaskData("task1", "desc");
         TaskData task2 = new TaskData("task2", "desc");
+        task.setDuration(120);
+        task.setStartDate(2022, 2, 24);
+        task1.setDuration(240);
+        task1.setStartDate(2022, 3, 24);
+        task2.setDuration(500);
+        task2.setStartDate(2022, 5, 24);
         inMemoryTaskManager.addToTasks(task1);
         inMemoryTaskManager.addToTasks(task);
         inMemoryTaskManager.addToTasks(task2);

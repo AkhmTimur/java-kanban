@@ -20,8 +20,12 @@ public class InMemoryTaskManager implements TaskManager {
         if(t1.getStartDate() == null && t2.getStartDate() == null) {
             return t1.getId() - t2.getId();
         }
-        if(t1.getStartDate() == null) return 1;
-        if(t2.getStartDate() == null) return -1;
+        if (t1.getStartDate() == null) {
+            return 1;
+        }
+        if(t2.getStartDate() == null) {
+            return -1;
+        }
         return t1.getStartDate().compareTo(t2.getStartDate());
     };
 
@@ -63,9 +67,6 @@ public class InMemoryTaskManager implements TaskManager {
                 throw new TaskValidationException("Задача " + taskData.getName() + " пересекается с другой задачей по времени.");
             }
 
-        }
-        if (taskData.getStartDate() == null || taskData.getEndTime() == null) {
-            /*prioritizedTasks.*/
         }
         prioritizedTasks.add(taskData);
 
@@ -193,7 +194,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateEpic(EpicData epicData) {
         EpicData savedEpic = epics.get(epicData.getId());
-        savedEpic.setName(epicData.getName());
+        if (savedEpic != null) {
+            savedEpic.setName(epicData.getName());
+            savedEpic.setDescription(epicData.getDescription());
+        }
         savedEpic.setDescription(epicData.getDescription());
     }
 
@@ -228,26 +232,25 @@ public class InMemoryTaskManager implements TaskManager {
 
     private void updateEpicTemporaryParams(EpicData epicData) {
         long newEpicDuration = 0;
-        for (TaskData prioritizedTask : prioritizedTasks) {
-            if (epicData.getSubTaskIdList().contains(prioritizedTask.getId())) {
-                if (epicData.getStartDate() == null && prioritizedTask.getStartDate() != null) {
-                    epicData.setStartDate(prioritizedTask.getStartDate());
-                } else if (prioritizedTask.getStartDate().isBefore(epicData.getStartDate())) {
-                    epicData.setStartDate(prioritizedTask.getStartDate());
-                } else if (prioritizedTask.getEndTime().isAfter(epicData.getEndTime())) {
-                    epicData.setEndTime(prioritizedTask.getEndTime());
-                } else if (prioritizedTask.getEndTime().isBefore(epicData.getEndTime())) {
-                    epicData.setEndTime(prioritizedTask.getEndTime());
-                }
-                if (epicData.getDuration() == null && prioritizedTask.getDuration() != null) {
-                    epicData.setDuration(prioritizedTask.getDuration().toMinutes());
-                } else {
-                    newEpicDuration += prioritizedTask.getDuration().toMinutes();
-                    epicData.setDuration(newEpicDuration);
-                }
-                if (epicData.getStartDate() != null && epicData.getEndTime() == null) {
-                    epicData.setEndTime(epicData.getStartDate().plus(epicData.getDuration()));
-                }
+        for (Integer subTaskId : epicData.getSubTaskIdList()) {
+            SubTaskData subTask = getSubTaskById(subTaskId);
+            if (epicData.getStartDate() == null && subTask.getStartDate() != null) {
+                epicData.setStartDate(subTask.getStartDate());
+            } else if (subTask.getStartDate().isBefore(epicData.getStartDate())) {
+                epicData.setStartDate(subTask.getStartDate());
+            } else if (subTask.getEndTime().isAfter(epicData.getEndTime())) {
+                epicData.setEndTime(subTask.getEndTime());
+            } else if (subTask.getEndTime().isBefore(epicData.getEndTime())) {
+                epicData.setEndTime(subTask.getEndTime());
+            }
+            if (epicData.getDuration() == null && subTask.getDuration() != null) {
+                epicData.setDuration(subTask.getDuration().toMinutes());
+            } else {
+                newEpicDuration += subTask.getDuration().toMinutes();
+                epicData.setDuration(newEpicDuration);
+            }
+            if (epicData.getStartDate() != null && epicData.getEndTime() == null) {
+                epicData.setEndTime(epicData.getStartDate().plus(epicData.getDuration()));
             }
         }
     }

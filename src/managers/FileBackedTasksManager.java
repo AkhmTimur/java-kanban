@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 public class FileBackedTasksManager extends InMemoryTaskManager {
     private File fileForSave = new File("./src/", "example.csv");
     private boolean isTasksRead = false;
-    HistoryManager<TaskData> historyManager = Managers.getHistoryDefault();
+    HistoryManager<TaskData> historyManager = inMemoryHistoryManager;
 
     public static void main(String[] args) {
 
@@ -44,21 +44,28 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             SubTaskData subT2 = new SubTaskData("Собрать вещи2", "Собирать вещи2");
             SubTaskData subT3 = new SubTaskData("Собрать вещи3", "Собирать вещи3");
 
+            newTaskData.setDuration(120);
+            newTaskData.setStartDate(2022, 2, 24);
+            newTaskData1.setDuration(240);
+            newTaskData1.setStartDate(2022, 3, 24);
             fileManager.addToTasks(newTaskData);
             fileManager.addToTasks(newTaskData1);
-            fileManager.addToEpics(epic0);
 
+            fileManager.addToEpics(epic0);
             fileManager.addToEpics(epic3);
             subT1.setEpicId(epic3.getId());
             subT2.setEpicId(epic3.getId());
             subT3.setEpicId(epic3.getId());
+            subT1.setDuration(120);
+            subT1.setStartDate(2022, 2, 25);
+            subT2.setDuration(240);
+            subT2.setStartDate(2022, 2, 26);
+            subT3.setDuration(360);
+            subT3.setStartDate(2022, 2, 27);
 
             fileManager.addToSubTasks(subT1);
             fileManager.addToSubTasks(subT2);
             fileManager.addToSubTasks(subT3);
-            fileManager.addSubTaskToEpics(subT1);
-            fileManager.addSubTaskToEpics(subT2);
-            fileManager.addSubTaskToEpics(subT3);
 
             fileManager.getEpicById(epic3.getId());
             fileManager.getEpicById(epic0.getId());
@@ -74,12 +81,13 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
 
-    FileBackedTasksManager() {
+    public FileBackedTasksManager() {
         loadFromFile(fileForSave);
     }
 
     public FileBackedTasksManager(File file) {
         this.fileForSave = file;
+        loadFromFile(fileForSave);
     }
 
     private void save() throws ManagerSaveException {
@@ -157,6 +165,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                         for (TaskData dataItem : convertIdToData(historyFromString(line))) {
                             historyManager.add(dataItem);
                         }
+                        break;
                     }
                 } else {
                     isTasksRead = true;
@@ -176,7 +185,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         String dataType = lineValues[1];
         String dataName = lineValues[2];
         String description = lineValues[4];
-        Statuses status = null;
+        Statuses status = Statuses.valueOf(lineValues[3]);
 
         LocalDateTime taskStart = LocalDateTime.now();
         LocalDateTime taskEndTime = LocalDateTime.now();
@@ -195,7 +204,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 EpicData epic;
                 epic = new EpicData(dataName, description, id, status);
                 epic.setStartDate(taskStart);
-                epic.setDuration(Duration.between(taskStart, taskEndTime).toMinutes());
+                epic.setEndTime(taskEndTime);
                 return epic;
             case "SUBTASK":
                 SubTaskData subTask = new SubTaskData(dataName, description, id, status);
@@ -203,11 +212,11 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 if (lineValues[7] != null) {
                     epicId = Integer.parseInt(lineValues[7].trim());
                 }
-                subTask.setEpicId(epicId);
-                addSubTaskToEpics(subTask);
-
                 subTask.setStartDate(taskStart);
                 subTask.calcDurationByEndTime(taskEndTime);
+                subTask.setEpicId(epicId);
+                addToSubTasks(subTask);
+
                 return subTask;
             default:
                 return null;

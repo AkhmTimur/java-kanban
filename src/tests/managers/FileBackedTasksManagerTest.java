@@ -59,7 +59,7 @@ class FileBackedTasksManagerTest {
 
         fileBackedTasksManager.addToTasks(task);
 
-        assertEquals(task, fileBackedTasksManager.getTaskById(0));
+        assertEquals(task, fileBackedTasksManager.getTaskById(task.getId()));
     }
 
     @Test
@@ -105,7 +105,24 @@ class FileBackedTasksManagerTest {
         File file = new File("./src/", "example.csv");
         FileBackedTasksManager fileBackedTasksManager = new FileBackedTasksManager(file);
 
-        assertEquals(6, fileBackedTasksManager.getHistory().size());
+        newTaskData.setDuration(120);
+        newTaskData.setStartDate(2022, 2, 24);
+        newTaskData1.setDuration(240);
+        newTaskData1.setStartDate(2022, 3, 24);
+        fileBackedTasksManager.addToTasks(newTaskData);
+        fileBackedTasksManager.addToTasks(newTaskData1);
+        subT1.setDuration(120);
+        subT1.setStartDate(2022, 2, 25);
+        subT2.setDuration(240);
+        subT2.setStartDate(2022, 2, 26);
+        fileBackedTasksManager.addToEpics(epic3);
+        subT1.setEpicId(epic3.getId());
+        subT2.setEpicId(epic3.getId());
+        fileBackedTasksManager.getTaskById(0);
+        fileBackedTasksManager.getTaskById(1);
+        fileBackedTasksManager.getEpicById(2);
+
+        assertEquals(3, fileBackedTasksManager.getHistory().size());
     }
 
     @Test
