@@ -5,7 +5,6 @@ import dataClasses.SubTaskData;
 import dataClasses.TaskData;
 import enums.Statuses;
 import interfaces.TaskManager;
-import managers.Managers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +32,15 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         epic1 = new EpicData("epicName1", "desc", Statuses.NEW);
         subTask = new SubTaskData("subTaskName", "desc");
         subTask1 = new SubTaskData("subTaskName1", "desc");
+
+        task.setDuration(120);
+        task.setStartDate(2022, 2, 24);
+        task1.setDuration(240);
+        task1.setStartDate(2022, 3, 24);
+        subTask.setDuration(120);
+        subTask.setStartDate(2022, 2, 25);
+        subTask1.setDuration(240);
+        subTask1.setStartDate(2022, 2, 26);
     }
 
     abstract protected T getTaskManager();
@@ -85,6 +93,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void deleteTaskByIdTest() {
+        inMemoryTaskManager.deleteAllTasks();
         inMemoryTaskManager.addToTasks(task);
         inMemoryTaskManager.deleteTaskById(task.getId());
 
@@ -209,12 +218,14 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void deleteTaskByIdTestEmpty() {
-        assertNull(inMemoryTaskManager.deleteTaskById(0));
+        inMemoryTaskManager.deleteTaskById(0);
+        assertNull(inMemoryTaskManager.getTaskById(0));
     }
 
     @Test
     void deleteEpicByIdTestEmpty() {
-        assertNull(inMemoryTaskManager.deleteEpicById(0));
+        inMemoryTaskManager.deleteEpicById(0);
+        assertNull(inMemoryTaskManager.getEpicById(0));
     }
 
     @Test
@@ -303,14 +314,18 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     void deleteTaskByIdTestWrong() {
         inMemoryTaskManager.addToTasks(task);
 
-        assertNull(inMemoryTaskManager.deleteTaskById(15));
+        inMemoryTaskManager.deleteTaskById(15);
+
+        assertNull(inMemoryTaskManager.getTaskById(15));
     }
 
     @Test
     void deleteEpicByIdTestWrong() {
         inMemoryTaskManager.addToEpics(epic);
 
-        assertNull(inMemoryTaskManager.deleteEpicById(15));
+        inMemoryTaskManager.deleteEpicById(15);
+
+        assertNull(inMemoryTaskManager.getEpicById(15));
     }
 
     @Test
@@ -319,7 +334,9 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         subTask.setEpicId(epic.getId());
         inMemoryTaskManager.addToSubTasks(subTask);
 
-        assertNull(inMemoryTaskManager.deleteSubTaskById(15));
+        inMemoryTaskManager.deleteSubTaskById(15);
+
+        assertNull(inMemoryTaskManager.getSubTaskById(15));
     }
 
     @Test
@@ -328,7 +345,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         inMemoryTaskManager.updateTask(task);
 
-        assertEquals(15, inMemoryTaskManager.getTaskById(task.getId()).getId());
+        assertNull(inMemoryTaskManager.getTaskById(15));
     }
 
     @Test
@@ -337,7 +354,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         inMemoryTaskManager.updateEpic(epic);
 
-        assertEquals(15, inMemoryTaskManager.getEpicById(epic.getId()).getId());
+        assertNull(inMemoryTaskManager.getEpicById(15));
     }
 
     @Test
@@ -348,7 +365,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         inMemoryTaskManager.updateSubTask(subTask);
 
-        assertEquals(15, inMemoryTaskManager.getSubTaskById(subTask.getId()).getId());
+        assertNull(inMemoryTaskManager.getSubTaskById(15));
     }
 
     @Test

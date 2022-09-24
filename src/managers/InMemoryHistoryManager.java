@@ -20,14 +20,6 @@ public class InMemoryHistoryManager implements HistoryManager<TaskData> {
         }
     }
 
-    public void addAll(TaskData data) {
-        if (data != null) {
-            int id = data.getId();
-            removeNode(historyMap.get(id));
-            historyMap.put(id, history.linkLast(data));
-        }
-    }
-
     public ArrayList<TaskData> getHistory() {
         ArrayList<TaskData> result = new ArrayList<>();
 

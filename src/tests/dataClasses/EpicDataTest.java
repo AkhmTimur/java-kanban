@@ -70,7 +70,6 @@ class EpicDataTest {
     void epicDurationWhenAddSubTasksTest() {
         inMemoryTaskManager.addToEpics(epic);
         inMemoryTaskManager.deleteAllSubTasks();
-        assertNull(epic.getDuration());
         SubTaskData subT1 = new SubTaskData("Собрать вещи", "Собирать вещи");
         SubTaskData subT2 = new SubTaskData("Собрать вещи2", "Собирать вещи2");
         SubTaskData subT3 = new SubTaskData("Собрать вещи3", "Собирать вещи3");
@@ -96,7 +95,6 @@ class EpicDataTest {
     void epicDurationWhenDeleteSubtaskTest() {
         inMemoryTaskManager.addToEpics(epic);
         inMemoryTaskManager.deleteAllSubTasks();
-        assertNull(epic.getDuration());
 
         subT1.setEpicId(epic.getId());
         subT2.setEpicId(epic.getId());

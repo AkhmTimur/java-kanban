@@ -6,7 +6,9 @@ import dataClasses.TaskData;
 import enums.Statuses;
 import exceptions.ManagerSaveException;
 import interfaces.HistoryManager;
+import interfaces.TaskManager;
 import managers.FileBackedTasksManager;
+import managers.InMemoryTaskManager;
 import managers.Managers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FileBackedTasksManagerTest {
+class FileBackedTasksManagerTest extends TaskManagerTest<TaskManager> {
 
     FileBackedTasksManager fileManager;
     HistoryManager<TaskData> historyManager;
@@ -25,22 +27,20 @@ class FileBackedTasksManagerTest {
     TaskData newTaskData1;
     EpicData epic3;
     SubTaskData subT3;
-
-    File fileForSave;
     TaskData task;
     EpicData epic0;
     SubTaskData subT1;
     SubTaskData subT2;
 
     @BeforeEach
-    void beforeEach() {
+    void beforeEachFileManager() {
         try {
             fileManager = Managers.getFileBackedTasksManager();
         } catch (IOException ex) {
             throw new ManagerSaveException("Не удалось прочитать файл");
 
         }
-        newTaskData = new TaskData("Победить в чемпионате по поеданию бургеров", "Нужно тренироваться, едим бургеры!");
+        newTaskData = new TaskData("Победить в чемпионате по поеданию бургеров", "Нужно тренироваться - едим бургеры!");
         newTaskData1 = new TaskData("Пробежать марафон", "Попробовать свои силы на марафоне который будет осенью");
         epic3 = new EpicData("Переехать3", "Что-то сделать в процессе3", Statuses.NEW);
         subT3 = new SubTaskData("Собрать вещи3", "Собирать вещи3");
@@ -50,6 +50,12 @@ class FileBackedTasksManagerTest {
         subT1 = new SubTaskData("Собрать вещи", "Собирать вещи");
         subT2 = new SubTaskData("Собрать вещи2", "Собирать вещи2");
     }
+
+    @Override
+    protected TaskManager getTaskManager() {
+        return new InMemoryTaskManager();
+    }
+
 
     @Test
     void emptyTasksSaveTest() {
@@ -66,6 +72,7 @@ class FileBackedTasksManagerTest {
     void emptyTasksLoadTest() {
         File file = new File("./src/", "test.csv");
         FileBackedTasksManager fileBackedTasksManager = new FileBackedTasksManager(file);
+        fileBackedTasksManager.deleteAllTasks();
         assertEquals(0, fileBackedTasksManager.getAllTasks().size());
     }
 
@@ -81,9 +88,9 @@ class FileBackedTasksManagerTest {
 
     @Test
     void epicWithOutSubtasksLoadTest() {
-        fileManager.getEpicById(2);
+        fileManager.addToEpics(epic);
 
-        assertEquals(0, fileManager.getEpicById(2).getSubTaskIdList().size());
+        assertEquals(0, fileManager.getEpicById(epic.getId()).getSubTaskIdList().size());
     }
 
     @Test
@@ -105,6 +112,10 @@ class FileBackedTasksManagerTest {
         File file = new File("./src/", "example.csv");
         FileBackedTasksManager fileBackedTasksManager = new FileBackedTasksManager(file);
 
+        for (TaskData task : fileBackedTasksManager.getHistory()) {
+            int id = task.getId();
+            historyManager.remove(id);
+        }
         newTaskData.setDuration(120);
         newTaskData.setStartDate(2022, 2, 24);
         newTaskData1.setDuration(240);

@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 public class FileBackedTasksManager extends InMemoryTaskManager {
     private File fileForSave = new File("./src/", "example.csv");
     private boolean isTasksRead = false;
-    HistoryManager<TaskData> historyManager = inMemoryHistoryManager;
 
     public static void main(String[] args) {
 
@@ -163,7 +162,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                         }
                     } else {
                         for (TaskData dataItem : convertIdToData(historyFromString(line))) {
-                            historyManager.add(dataItem);
+                            inMemoryHistoryManager.add(dataItem);
                         }
                         break;
                     }
