@@ -8,8 +8,8 @@ import java.io.IOException;
 
 public class Managers {
 
-    public static TaskManager getDefault() {
-        return new InMemoryTaskManager();
+    public static HTTPTaskManager getDefault() {
+        return new HTTPTaskManager("http://localhost:" + KVServer.PORT);
     }
 
     public static HistoryManager<TaskData> getHistoryDefault() {

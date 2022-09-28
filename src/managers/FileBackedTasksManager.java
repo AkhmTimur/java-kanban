@@ -81,7 +81,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
 
     public FileBackedTasksManager() {
-        loadFromFile(fileForSave);
     }
 
     public FileBackedTasksManager(File file) {
@@ -89,7 +88,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         loadFromFile(fileForSave);
     }
 
-    private void save() throws ManagerSaveException {
+    protected void save() throws ManagerSaveException {
         try (Writer fileWriter = new FileWriter(fileForSave)) {
             fileWriter.write("id,type,name,status,description,startDate,endDate,epic" + "\n");
 
@@ -275,10 +274,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     public void addToSubTasks(SubTaskData subTask) {
         super.addToSubTasks(subTask);
         save();
-    }
-
-    private void addSubTaskToEpics(SubTaskData subTaskData) {
-        epics.get(subTaskData.getEpicId()).addSubTask(subTaskData);
     }
 
     @Override
