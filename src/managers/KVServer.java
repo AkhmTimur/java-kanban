@@ -12,9 +12,6 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import server.HttpTaskServer;
 
-/**
- * Постман: https://www.getpostman.com/collections/a83b61d9e1c81c10575c
- */
 public class KVServer {
 	public static final int PORT = 8078;
 	private final String apiToken;
@@ -28,21 +25,43 @@ public class KVServer {
 		server.createContext("/register", this::register);
 		server.createContext("/save", this::save);
 		server.createContext("/load", this::load);
-		server.createContext("/tasks", new HttpTaskServer.TaskHandler());
 	}
 
 	private void load(HttpExchange h) {
-		String key = h.getRequestURI().getPath().substring("/load/".length());
-		try {
-			sendText(h, data.get(key));
-		} catch(IOException ex) {
-			System.out.println("Ошибка!");
+		try (h) {
+			System.out.println("\n/load");
+			if (!hasAuth(h)) {
+				System.out.println("Запрос неавторизован, нужен параметр в query API_TOKEN со значением апи-ключа");
+				h.sendResponseHeaders(403, 0);
+				return;
+			}
+			if ("GET".equals(h.getRequestMethod())) {
+				String key = h.getRequestURI().getPath().substring("/save/".length());
+				if (key.isEmpty()) {
+					System.out.println("Key для сохранения пустой. key указывается в пути: /save/{key}");
+					h.sendResponseHeaders(400, 0);
+					return;
+				}
+				if (!data.containsKey(key)) {
+					System.out.println("Не могу достать данные для ключа '" + key + "', данные отсутствуют");
+					h.sendResponseHeaders(404, 0);
+					return;
+				}
+				sendText(h, data.get(key));
+				System.out.println("Значение для ключа " + key + " успешно отправлено в ответ на запрос!");
+				h.sendResponseHeaders(200, 0);
+			} else {
+				System.out.println("/save ждёт GET-запрос, а получил: " + h.getRequestMethod());
+				h.sendResponseHeaders(405, 0);
+			}
+		} catch (IOException ex) {
+			System.out.println(ex.getMessage());
 		}
 	}
 
 	private void save(HttpExchange h) throws IOException {
 		System.out.println(h.getRequestBody());
-		try {
+		try (h; h) {
 			System.out.println("\n/save");
 			if (!hasAuth(h)) {
 				System.out.println("Запрос неавторизован, нужен параметр в query API_TOKEN со значением апи-ключа");
@@ -69,13 +88,11 @@ public class KVServer {
 				System.out.println("/save ждёт POST-запрос, а получил: " + h.getRequestMethod());
 				h.sendResponseHeaders(405, 0);
 			}
-		} finally {
-			h.close();
 		}
 	}
 
 	private void register(HttpExchange h) throws IOException {
-		try {
+		try (h) {
 			System.out.println("\n/register");
 			if ("GET".equals(h.getRequestMethod())) {
 				sendText(h, apiToken);
@@ -83,8 +100,6 @@ public class KVServer {
 				System.out.println("/register ждёт GET-запрос, а получил " + h.getRequestMethod());
 				h.sendResponseHeaders(405, 0);
 			}
-		} finally {
-			h.close();
 		}
 	}
 
@@ -100,22 +115,29 @@ public class KVServer {
 	}
 
 	protected boolean hasAuth(HttpExchange h) {
-		String rawQuery = h.getRequestURI().getRawQuery();
-		return rawQuery != null && (rawQuery.contains("API_TOKEN=" + apiToken) || rawQuery.contains("API_TOKEN=DEBUG"));
+		try(h) {
+			String rawQuery = h.getRequestURI().getRawQuery();
+			return rawQuery != null && (rawQuery.contains("API_TOKEN=" + apiToken) || rawQuery.contains("API_TOKEN=DEBUG"));
+		}
 	}
 
 	protected String readText(HttpExchange h) throws IOException {
-		return new String(h.getRequestBody().readAllBytes(), UTF_8);
+		try(h) {
+			return new String(h.getRequestBody().readAllBytes(), UTF_8);
+		}
 	}
 
 	protected void sendText(HttpExchange h, String text) throws IOException {
-		byte[] resp = text.getBytes(UTF_8);
-		h.getResponseHeaders().add("Content-Type", "application/json");
-		h.sendResponseHeaders(200, resp.length);
-		h.getResponseBody().write(resp);
+		try(h) {
+			byte[] resp = text.getBytes(UTF_8);
+			h.getResponseHeaders().add("Content-Type", "application/json");
+			h.sendResponseHeaders(200, resp.length);
+			h.getResponseBody().write(resp);
+		}
 	}
 
 	public void stop() {
-		server.stop(1);
+		System.out.println("Сервер на порту " + PORT + " закрыт.");
+		server.stop(0);
 	}
 }

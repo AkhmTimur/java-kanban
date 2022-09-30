@@ -8,7 +8,7 @@ import java.net.http.HttpResponse;
 
 public class KVTaskClient {
 
-    private static String apiToken;
+    private final String apiToken;
     private final String urlToServer;
 
     public KVTaskClient(String urlToServer) {
@@ -18,7 +18,7 @@ public class KVTaskClient {
 
     private String getRegistered() {
         try {
-            HttpRequest request =  HttpRequest.newBuilder().uri(URI.create(urlToServer + "/register")).GET().build();
+            HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlToServer + "/register")).GET().build();
             HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
             return response.body();
         } catch (IOException | InterruptedException ex) {

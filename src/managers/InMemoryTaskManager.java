@@ -64,7 +64,7 @@ public class InMemoryTaskManager implements TaskManager {
     void addToSetValidation(TaskData taskData) {
         for (TaskData prioritizedTask : prioritizedTasks) {
             if (taskData.getEndTime().isAfter(prioritizedTask.getStartDate()) &&
-                    taskData.getStartDate().isBefore(prioritizedTask.getEndTime())) {
+                    taskData.getStartDate().isBefore(prioritizedTask.getEndTime()) && prioritizedTasks.size() > 1) {
                 throw new TaskValidationException("Задача " + taskData.getName() + " пересекается с другой задачей по времени.");
             }
 
@@ -76,6 +76,24 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<TaskData> getPrioritizedTasks() {
         return new ArrayList<>(prioritizedTasks);
+    }
+
+    @Override
+    public List<SubTaskData> getEpicSubTasks(int id) {
+        List<SubTaskData> result = new ArrayList<>();
+        for (Integer epicId : epics.keySet()) {
+            if (epicId == id) {
+                for (Integer subTaskId : epics.get(epicId).getSubTaskIdList()) {
+                    ArrayList<SubTaskData> allSubTasks = getAllSubTasks();
+                    for (SubTaskData subTask : allSubTasks) {
+                        if (subTask.getId() == subTaskId) {
+                            result.add(subTask);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
@@ -98,7 +116,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public TaskData deleteTaskById(int id) {
-        if(tasks.containsKey(id)) {
+        if (tasks.containsKey(id)) {
             inMemoryHistoryManager.remove(id);
             prioritizedTasks.remove(tasks.get(id));
             return tasks.remove(id);
@@ -109,7 +127,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public EpicData deleteEpicById(int id) {
-        if(epics.containsKey(id)) {
+        if (epics.containsKey(id)) {
             inMemoryHistoryManager.remove(id);
             EpicData epic = epics.remove(id);
 
@@ -126,7 +144,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public SubTaskData deleteSubTaskById(int id) {
-        if(subTasks.containsKey(id)) {
+        if (subTasks.containsKey(id)) {
             inMemoryHistoryManager.remove(id);
             SubTaskData subTask = subTasks.remove(id);
             prioritizedTasks.remove(subTask);

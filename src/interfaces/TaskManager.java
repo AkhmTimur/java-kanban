@@ -23,6 +23,8 @@ public interface TaskManager {
 
     List<TaskData> getPrioritizedTasks();
 
+    List<SubTaskData> getEpicSubTasks(int id);
+
     TaskData deleteTaskById(int id);
 
     EpicData deleteEpicById(int id);

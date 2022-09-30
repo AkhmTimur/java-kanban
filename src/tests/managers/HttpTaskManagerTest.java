@@ -2,11 +2,11 @@ package tests.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import dataClasses.EpicData;
-import dataClasses.SubTaskData;
 import dataClasses.TaskData;
-import enums.Statuses;
 import managers.HTTPTaskManager;
+import managers.KVServer;
+import managers.KVTaskClient;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,11 +23,20 @@ public class HttpTaskManagerTest {
     Gson gson;
     HTTPTaskManager httpTaskManager;
     TaskData newTaskData;
+    KVServer kvServer;
+    String urlToServer;
 
     @BeforeEach
     void beforeEach() {
+        urlToServer = "http://localhost:8078";
+        try {
+            kvServer = new KVServer();
+            kvServer.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         gson = new Gson();
-        httpTaskManager = new HTTPTaskManager("https://localhost:8078");
+        httpTaskManager = new HTTPTaskManager(urlToServer);
 
         newTaskData = new TaskData("test", "desc");
         newTaskData.setDuration(120);
@@ -37,15 +46,16 @@ public class HttpTaskManagerTest {
     @Test
     void taskSaveTest() {
         httpTaskManager.addToTasks(newTaskData);
-        httpTaskManager.save();
+
         try {
-            URI uri = URI.create("http://localhost:8080/tasks/task");
+            URI uri = URI.create(urlToServer + "/load/tasks");
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
                     .uri(uri)
                     .build();
             HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-            ArrayList<TaskData> tasks = gson.fromJson(response.body(), new TypeToken<ArrayList<TaskData>>() {}.getType());
+            ArrayList<TaskData> tasks = gson.fromJson(response.body(), new TypeToken<ArrayList<TaskData>>() {
+            }.getType());
             assertEquals(1, tasks.size());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
@@ -56,22 +66,14 @@ public class HttpTaskManagerTest {
     @Test
     void loadFromServer() {
         httpTaskManager.addToTasks(newTaskData);
-        EpicData epic = new EpicData("test", "testDesc", Statuses.NEW);
-        httpTaskManager.addToEpics(epic);
-        SubTaskData subTaskData = new SubTaskData("testSubtask", "desc");
-        subTaskData.setEpicId(epic.getId());
-        httpTaskManager.addToSubTasks(subTaskData);
-        subTaskData.setDuration(120);
-        subTaskData.setStartDate(2022, 2, 24);
-        httpTaskManager.save();
-        httpTaskManager.deleteAllTasks();
-        httpTaskManager.deleteAllEpics();
 
         httpTaskManager.loadFromServer();
+
         assertEquals(1, httpTaskManager.getAllTasks().size());
-        assertEquals(1, httpTaskManager.getAllEpics().size());
-        assertEquals(1, httpTaskManager.getAllSubTasks().size());
     }
 
-
+    @AfterEach
+    void stopServer() {
+        kvServer.stop();
+    }
 }
