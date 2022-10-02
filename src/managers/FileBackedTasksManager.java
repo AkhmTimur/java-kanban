@@ -214,7 +214,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 subTask.calcDurationByEndTime(taskEndTime);
                 subTask.setEpicId(epicId);
                 addToSubTasks(subTask);
-
                 return subTask;
             default:
                 return null;

@@ -8,7 +8,6 @@ import dataClasses.EpicData;
 import dataClasses.SubTaskData;
 import dataClasses.TaskData;
 import managers.FileBackedTasksManager;
-import managers.Managers;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,22 +21,22 @@ import java.util.List;
 public class HttpTaskServer extends FileBackedTasksManager {
     private static final int PORT = 8080;
     private final Gson gson;
-    static HttpServer server;
+    HttpServer server;
     public HttpTaskServer() {
         gson = new Gson();
         start();
-    }
-
-    public static void main(String[] args) {
-    }
-
-    public void start() {
         try {
             server = HttpServer.create(new InetSocketAddress("localhost", PORT), 0);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         server.createContext("/tasks", new TaskHandler());
+    }
+
+    public static void main(String[] args) {
+    }
+
+    public void start() {
         server.start();
         System.out.println("HTTP-сервер запущен на " + PORT + " порту!");
     }
@@ -123,33 +122,6 @@ public class HttpTaskServer extends FileBackedTasksManager {
             }
         }
 
-        private void updateData(String dataType, int idRequest, String body) {
-            switch (dataType) {
-                case "task":
-                    for (TaskData task : getAllTasks()) {
-                        if (task.getId() == idRequest) {
-                            updateTask(gson.fromJson(body, TaskData.class));
-                        }
-                    }
-                    break;
-                case "epic":
-                    for (EpicData epic : getAllEpics()) {
-                        if (epic.getId() == idRequest) {
-                            EpicData newEpic = gson.fromJson(body, EpicData.class);
-                            updateEpic(newEpic);
-                        }
-                    }
-                    break;
-                case "subTask":
-                    for (SubTaskData subTask : getAllSubTasks()) {
-                        if (subTask.getId() == idRequest) {
-                            updateEpic(gson.fromJson(body, EpicData.class));
-                        }
-                    }
-                    break;
-            }
-        }
-
         private void addToData(String dataType, String body) {
             if (dataType.equals("task")) {
                 TaskData task = gson.fromJson(body, TaskData.class);
@@ -198,25 +170,16 @@ public class HttpTaskServer extends FileBackedTasksManager {
                     }
                     case "DELETE" -> deleteDataByType(dataType);
                 }
-            }else if (pathSplit[pathSplit.length - 1].equals("update") && method.equals("POST")) {
-                InputStream inputStream = httpExchange.getRequestBody();
-                String body = null;
-                try {
-                    body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                updateData(dataType, idRequest, body);
-                String serialized = gson.toJson(getPrioritizedTasks());
-                sendSerialized(httpExchange, serialized);
             } else {
                 switch (method) {
-                    case "GET":
+                    case "GET" -> {
                         String serialized = gson.toJson(returnDataById(idRequest, dataType));
                         sendSerialized(httpExchange, serialized);
-                    case "DELETE":
-                        deleteDataByType(dataType);
+                    }
+                    case "DELETE" -> {
+                        deleteDataById(idRequest, dataType);
                         sendSerialized(httpExchange, "");
+                    }
                 }
             }
         }
