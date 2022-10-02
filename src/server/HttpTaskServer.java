@@ -7,7 +7,8 @@ import com.sun.net.httpserver.HttpServer;
 import dataClasses.EpicData;
 import dataClasses.SubTaskData;
 import dataClasses.TaskData;
-import managers.*;
+import managers.FileBackedTasksManager;
+import managers.Managers;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,18 +19,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HttpTaskServer {
+public class HttpTaskServer extends FileBackedTasksManager {
     private static final int PORT = 8080;
-    private final HTTPTaskManager httpTaskManager;
     private final Gson gson;
     static HttpServer server;
 
     public HttpTaskServer() {
-        httpTaskManager = new HTTPTaskManager();
         gson = new Gson();
+        start();
     }
 
     public static void main(String[] args) {
+        new HttpTaskServer();
     }
 
     public void start() {
@@ -52,22 +53,29 @@ public class HttpTaskServer {
             String method = httpExchange.getRequestMethod();
 
             String[] pathSplit = path.split("/");
-            String dataType = pathSplit[2];
-            int idRequest = getIdRequest(dataType, httpExchange);
+            String dataType = null;
+            int idRequest = -1;
+            if(pathSplit.length > 2) {
+                dataType = pathSplit[2];
+                idRequest = getIdRequest(dataType, httpExchange);
+            }
 
             if (dataType != null) {
                 if (dataType.equals("task") || dataType.equals("epic") || dataType.equals("subTask")) {
                     sendDataWithoutId(dataType, idRequest, httpExchange, method,pathSplit);
+                    httpExchange.sendResponseHeaders(200, 0);
+                    OutputStream os = httpExchange.getResponseBody();
+                    os.close();
                 } else if (pathSplit.length > 3 && pathSplit[3].equals("epic")) {
-                    List<SubTaskData> subTasks = httpTaskManager.getEpicSubTasks(idRequest);
+                    List<SubTaskData> subTasks = getEpicSubTasks(idRequest);
                     String serialized = gson.toJson(subTasks);
                     sendSerialized(httpExchange, serialized);
                 } else if (dataType.equals("history")) {
-                    String serialized = gson.toJson(httpTaskManager.getHistory());
+                    String serialized = gson.toJson(getHistory());
                     sendSerialized(httpExchange, serialized);
                 }
             } else if (pathSplit[pathSplit.length - 1].equals("tasks")) {
-                String serialized = gson.toJson(httpTaskManager.getPrioritizedTasks());
+                String serialized = gson.toJson(getPrioritizedTasks());
                 sendSerialized(httpExchange, serialized);
             }  else {
                 System.out.println("Метод " + httpExchange.getRequestMethod() + " не поддерживается");
@@ -76,71 +84,64 @@ public class HttpTaskServer {
         }
 
         private ArrayList<TaskData> returnByDataType(String dataType) {
-            httpTaskManager.loadFromServer();
             return switch (dataType) {
-                case "task" -> new ArrayList<>(httpTaskManager.getAllTasks());
-                case "epic" -> new ArrayList<>(httpTaskManager.getAllEpics());
-                case "subTask" -> new ArrayList<>(httpTaskManager.getAllSubTasks());
+                case "task" -> new ArrayList<>(getAllTasks());
+                case "epic" -> new ArrayList<>(getAllEpics());
+                case "subTask" -> new ArrayList<>(getAllSubTasks());
                 default -> new ArrayList<>();
             };
         }
 
         private TaskData returnDataById(int id, String dataType) {
-            httpTaskManager.loadFromServer();
             return switch (dataType) {
-                case "task" -> httpTaskManager.getTaskById(id);
-                case "epic" -> httpTaskManager.getEpicById(id);
-                case "subTask" -> httpTaskManager.getSubTaskById(id);
+                case "task" -> getTaskById(id);
+                case "epic" -> getEpicById(id);
+                case "subTask" -> getSubTaskById(id);
                 default -> null;
             };
         }
 
         private void deleteDataById(int id, String dataType) {
-            httpTaskManager.loadFromServer();
             switch (dataType) {
-                case "task":
-                    httpTaskManager.deleteTaskById(id);
-                case "epic":
-                    httpTaskManager.deleteEpicById(id);
-                case "subTask":
-                    httpTaskManager.deleteSubTaskById(id);
-                default:
+                case "task" -> deleteTaskById(id);
+                case "epic" -> deleteEpicById(id);
+                case "subTask" -> deleteSubTaskById(id);
+                default -> {
+                }
             }
         }
 
         private void deleteDataByType(String dataType) {
             switch (dataType) {
-                case "task":
-                    httpTaskManager.deleteAllTasks();
-                case "epic":
-                    httpTaskManager.deleteAllEpics();
-                case "subTask":
-                    httpTaskManager.deleteAllSubTasks();
-                default:
+                case "task" -> deleteAllTasks();
+                case "epic" -> deleteAllEpics();
+                case "subTask" -> deleteAllSubTasks();
+                default -> {
+                }
             }
         }
 
         private void updateData(String dataType, int idRequest, String body) {
             switch (dataType) {
                 case "task":
-                    for (TaskData task : httpTaskManager.getAllTasks()) {
+                    for (TaskData task : getAllTasks()) {
                         if (task.getId() == idRequest) {
-                            httpTaskManager.updateTask(gson.fromJson(body, TaskData.class));
+                            updateTask(gson.fromJson(body, TaskData.class));
                         }
                     }
                     break;
                 case "epic":
-                    for (EpicData epic : httpTaskManager.getAllEpics()) {
+                    for (EpicData epic : getAllEpics()) {
                         if (epic.getId() == idRequest) {
                             EpicData newEpic = gson.fromJson(body, EpicData.class);
-                            httpTaskManager.updateEpic(newEpic);
+                            updateEpic(newEpic);
                         }
                     }
                     break;
                 case "subTask":
-                    for (SubTaskData subTask : httpTaskManager.getAllSubTasks()) {
+                    for (SubTaskData subTask : getAllSubTasks()) {
                         if (subTask.getId() == idRequest) {
-                            httpTaskManager.updateEpic(gson.fromJson(body, EpicData.class));
+                            updateEpic(gson.fromJson(body, EpicData.class));
                         }
                     }
                     break;
@@ -149,11 +150,20 @@ public class HttpTaskServer {
 
         private void addToData(String dataType, String body) {
             if (dataType.equals("task")) {
-                httpTaskManager.addToTasks(gson.fromJson(body, TaskData.class));
+                TaskData task = gson.fromJson(body, TaskData.class);
+                if(!tasks.containsKey(task.getId())) {
+                    addToTasks(task);
+                }
             } else if (dataType.equals("epic")) {
-                httpTaskManager.addToEpics(gson.fromJson(body, EpicData.class));
+                EpicData epic = gson.fromJson(body, EpicData.class);
+                if(!epics.containsKey(epic.getId())) {
+                    addToEpics(epic);
+                }
             } else {
-                httpTaskManager.addToSubTasks(gson.fromJson(body, SubTaskData.class));
+                SubTaskData subTask = gson.fromJson(body, SubTaskData.class);
+                if(!subTasks.containsKey(subTask.getId())) {
+                    addToSubTasks(subTask);
+                }
             }
         }
 
@@ -169,20 +179,22 @@ public class HttpTaskServer {
         private void sendDataWithoutId(String dataType, int idRequest, HttpExchange httpExchange, String method, String[] pathSplit) {
             if (idRequest == -1) {
                 switch (method) {
-                    case "GET":
-                        String serialized = gson.toJson(returnByDataType(dataType));
+                    case "GET" -> {
+                        ArrayList<TaskData> tasks = returnByDataType(dataType);
+                        String serialized = gson.toJson(tasks);
                         sendSerialized(httpExchange, serialized);
-                    case "POST":
+                    }
+                    case "POST" -> {
                         InputStream inputStream = httpExchange.getRequestBody();
-                        String body = null;
+                        String body;
                         try {
                             body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
                         addToData(dataType, body);
-                    case "DELETE":
-                        deleteDataByType(dataType);
+                    }
+                    case "DELETE" -> deleteDataByType(dataType);
                 }
             }else if (pathSplit[pathSplit.length - 1].equals("update") && method.equals("POST")) {
                 InputStream inputStream = httpExchange.getRequestBody();
@@ -193,7 +205,7 @@ public class HttpTaskServer {
                     throw new RuntimeException(e);
                 }
                 updateData(dataType, idRequest, body);
-                String serialized = gson.toJson(httpTaskManager.getPrioritizedTasks());
+                String serialized = gson.toJson(getPrioritizedTasks());
                 sendSerialized(httpExchange, serialized);
             } else {
                 switch (method) {
@@ -201,7 +213,7 @@ public class HttpTaskServer {
                         String serialized = gson.toJson(returnDataById(idRequest, dataType));
                         sendSerialized(httpExchange, serialized);
                     case "DELETE":
-                        deleteDataById(idRequest, dataType);
+                        deleteDataByType(dataType);
                         sendSerialized(httpExchange, "");
                 }
             }
@@ -218,5 +230,9 @@ public class HttpTaskServer {
                 System.out.println(ex.getMessage());
             }
         }
+    }
+
+    @Override
+    public void save() {
     }
 }

@@ -1,19 +1,16 @@
 package managers;
 
-import adapters.DurationAdapter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dataClasses.EpicData;
 import dataClasses.SubTaskData;
 import dataClasses.TaskData;
 
-import java.time.Duration;
 import java.util.ArrayList;
-import java.util.List;
 
 public class HTTPTaskManager extends FileBackedTasksManager {
     private final Gson gson = new Gson();
-    private KVTaskClient client;
+    public KVTaskClient client;
 
     public static void main(String[] args){
         HTTPTaskManager httpTaskManager = Managers.getDefault();
@@ -37,10 +34,10 @@ public class HTTPTaskManager extends FileBackedTasksManager {
 
     @Override
     public void save() {
-        /*client.put("tasks", gson.toJson(getAllTasks()));
+        client.put("tasks", gson.toJson(getAllTasks()));
         client.put("epics", gson.toJson(getAllEpics()));
         client.put("subTasks", gson.toJson(getAllSubTasks()));
-        client.put("history", gson.toJson(getHistory()));*/
+        client.put("history", gson.toJson(getHistory()));
     }
 
     public void loadFromServer() {
