@@ -6,7 +6,7 @@ import dataClasses.EpicData;
 import dataClasses.SubTaskData;
 import dataClasses.TaskData;
 import enums.Statuses;
-import managers.KVServer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import server.HttpTaskServer;
@@ -28,19 +28,14 @@ public class HttpTaskServerTest {
     HttpRequest request;
     HttpTaskServer httpTaskServer;
 
-    KVServer kvServer;
-
     @BeforeEach
     void serverStart() {
         httpTaskServer = new HttpTaskServer();
-        try {
-            kvServer =  new KVServer();
-            kvServer.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
-
+    @AfterEach
+    void serverStop() {
+        httpTaskServer.stop();
+    }
 
     @Test
     void getTasksFromServerTest() {

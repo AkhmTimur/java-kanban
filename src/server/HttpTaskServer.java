@@ -23,14 +23,12 @@ public class HttpTaskServer extends FileBackedTasksManager {
     private static final int PORT = 8080;
     private final Gson gson;
     static HttpServer server;
-
     public HttpTaskServer() {
         gson = new Gson();
         start();
     }
 
     public static void main(String[] args) {
-        new HttpTaskServer();
     }
 
     public void start() {
@@ -42,6 +40,10 @@ public class HttpTaskServer extends FileBackedTasksManager {
         server.createContext("/tasks", new TaskHandler());
         server.start();
         System.out.println("HTTP-сервер запущен на " + PORT + " порту!");
+    }
+
+    public void stop() {
+        server.stop(0);
     }
 
     public class TaskHandler implements HttpHandler {
