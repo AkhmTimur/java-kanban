@@ -10,7 +10,7 @@ import java.util.Objects;
 public class TaskData {
     private String name;
     private String description;
-    private int id;
+    private int id = -1;
     protected Statuses status;
     private Duration duration;
     private LocalDateTime startDate;

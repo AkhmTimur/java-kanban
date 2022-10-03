@@ -11,6 +11,7 @@ import java.util.ArrayList;
 public class HTTPTaskManager extends FileBackedTasksManager {
     private final Gson gson = new Gson();
     public KVTaskClient client;
+    private boolean readyToLoad = false;
 
     public static void main(String[] args){
         HTTPTaskManager httpTaskManager = Managers.getDefault();
@@ -28,42 +29,56 @@ public class HTTPTaskManager extends FileBackedTasksManager {
     }
     public HTTPTaskManager(String urlToKVServer) {
         client = new KVTaskClient(urlToKVServer);
-        loadFromServer();
+        if(readyToLoad) {
+            loadFromServer();
+        }
     }
 
     @Override
     public void save() {
-        client.put("tasks", gson.toJson(getAllTasks()));
-        client.put("epics", gson.toJson(getAllEpics()));
-        client.put("subTasks", gson.toJson(getAllSubTasks()));
-        client.put("history", gson.toJson(getHistory()));
+        if(getAllTasks().size() > 0 || getAllEpics().size() > 0 || getAllSubTasks().size() > 0 || getHistory().size() > 0) {
+            client.put("tasks", gson.toJson(getAllTasks()));
+            client.put("epics", gson.toJson(getAllEpics()));
+            client.put("subTasks", gson.toJson(getAllSubTasks()));
+            client.put("history", gson.toJson(getHistory()));
+            readyToLoad = true;
+        }
     }
 
     public void loadFromServer() {
         ArrayList<TaskData> tasks = gson.fromJson(client.load("tasks"), new TypeToken<ArrayList<TaskData>>() {}.getType());
-        for (TaskData task : tasks) {
-            if(task.getId() > nextId) {
-                nextId = task.getId();
+        if(tasks.size() > 0 ) {
+            for (TaskData task : tasks) {
+                if(task.getId() > nextId) {
+                    nextId = task.getId();
+                }
+                this.tasks.put(task.getId(), task);
             }
-            this.tasks.put(task.getId(), task);
         }
         ArrayList<EpicData> epics = gson.fromJson(client.load("epics"), new TypeToken<ArrayList<EpicData>>() {}.getType());
-        for (EpicData epic : epics) {
-            if(epic.getId() > nextId) {
-                nextId = epic.getId();
+        if(epics.size() > 0) {
+            for (EpicData epic : epics) {
+                if(epic.getId() > nextId) {
+                    nextId = epic.getId();
+                }
+                this.epics.put(epic.getId(), epic);
             }
-            this.epics.put(epic.getId(), epic);
         }
         ArrayList<SubTaskData> subTasks = gson.fromJson(client.load("subTasks"), new TypeToken<ArrayList<SubTaskData>>() {}.getType());
-        for (SubTaskData subTask: subTasks) {
-            if(subTask.getId() > nextId) {
-                nextId = subTask.getId();
+        if(subTasks.size() > 0) {
+            for (SubTaskData subTask: subTasks) {
+                if(subTask.getId() > nextId) {
+                    nextId = subTask.getId();
+                }
+                this.subTasks.put(subTask.getId(), subTask);
             }
-            this.subTasks.put(subTask.getId(), subTask);
         }
         ArrayList<TaskData> history = gson.fromJson(client.load("history"), new TypeToken<ArrayList<TaskData>>() {}.getType());
-        for (TaskData taskData : history) {
-            inMemoryHistoryManager.add(taskData);
+        if(history.size() > 0) {
+            for (TaskData taskData : history) {
+                inMemoryHistoryManager.add(taskData);
+            }
         }
+
     }
 }

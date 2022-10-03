@@ -6,6 +6,8 @@ import dataClasses.EpicData;
 import dataClasses.SubTaskData;
 import dataClasses.TaskData;
 import enums.Statuses;
+import managers.HTTPTaskManager;
+import managers.KVServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,19 +24,26 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HttpTaskServerTest {
-
-    public static final int PORT = 8080;
     private final Gson gson = new Gson();
     HttpRequest request;
     HttpTaskServer httpTaskServer;
-
+    HTTPTaskManager httpTaskManager;
+    KVServer kvServer;
     @BeforeEach
     void serverStart() {
-        httpTaskServer = new HttpTaskServer();
+        try {
+            kvServer = new KVServer();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        kvServer.start();
+        httpTaskManager = new HTTPTaskManager("http://localhost:8078");
+        httpTaskServer = new HttpTaskServer(httpTaskManager);
     }
     @AfterEach
     void serverStop() {
         httpTaskServer.stop();
+        kvServer.stop();
     }
 
     @Test
@@ -42,22 +51,27 @@ public class HttpTaskServerTest {
         TaskData newTaskData = new TaskData("test", "desc");
         newTaskData.setDuration(120);
         newTaskData.setStartDate(2022, 2, 24);
-        httpTaskServer.addToTasks(newTaskData);
-        URI uri = URI.create("http://localhost:" + PORT + "/tasks/task");
-        request = HttpRequest.newBuilder()
-                .uri(uri)
-                .GET()
-                .build();
-        HttpResponse<String> response;
         try {
-            response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            URI uri = URI.create("http://localhost:8080/tasks/task");
+            String json = gson.toJson(newTaskData, TaskData.class);
+            request = HttpRequest.newBuilder()
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .uri(uri)
+                    .build();
+            HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+
+            URI url = URI.create("http://localhost:8080/tasks/task");
+            HttpRequest getRequest = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(url)
+                    .build();
+            HttpResponse<String> response = HttpClient.newHttpClient().send(getRequest, HttpResponse.BodyHandlers.ofString());
+            ArrayList<TaskData> tasks = gson.fromJson(response.body(), new TypeToken<ArrayList<TaskData>>() {
+            }.getType());
+            assertEquals(1, tasks.size());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-
-        ArrayList<TaskData> tasks = gson.fromJson(response.body(), new TypeToken<ArrayList<TaskData>>() {
-        }.getType());
-        assertEquals(1, tasks.size());
     }
 
     @Test
@@ -65,7 +79,7 @@ public class HttpTaskServerTest {
         TaskData newTaskData = new TaskData("test", "desc");
         newTaskData.setDuration(120);
         newTaskData.setStartDate(2022, 2, 24);
-        httpTaskServer.addToTasks(newTaskData);
+        httpTaskManager.addToTasks(newTaskData);
         try {
             URI uri = URI.create("http://localhost:8080/tasks/task?id=0");
             request = HttpRequest.newBuilder()
@@ -85,7 +99,6 @@ public class HttpTaskServerTest {
         TaskData newTaskData = new TaskData("test", "desc");
         newTaskData.setDuration(120);
         newTaskData.setStartDate(2022, 2, 24);
-        httpTaskServer.addToTasks(newTaskData);
         try {
             URI uri = URI.create("http://localhost:8080/tasks/task");
             String json = gson.toJson(newTaskData, TaskData.class);
@@ -114,26 +127,32 @@ public class HttpTaskServerTest {
         TaskData newTaskData = new TaskData("test", "desc");
         newTaskData.setDuration(120);
         newTaskData.setStartDate(2022, 2, 24);
-        httpTaskServer.addToTasks(newTaskData);
+        httpTaskManager.addToTasks(newTaskData);
         try {
-            URI uri = URI.create("http://localhost:8080/tasks/task?id=" + newTaskData.getId());
+            URI uri = URI.create("http://localhost:8080/tasks/task");
             String json = gson.toJson(newTaskData, TaskData.class);
             request = HttpRequest.newBuilder()
-                    .DELETE()
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
                     .uri(uri)
                     .build();
             HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
-            URI uri1 = URI.create("http://localhost:8080/tasks/task");
-            request = HttpRequest.newBuilder()
-                    .GET()
-                    .uri(uri1)
+            URI url = URI.create("http://localhost:8080/tasks/task?id=0");
+            HttpRequest getRequest = HttpRequest.newBuilder()
+                    .DELETE()
+                    .uri(url)
                     .build();
-            HttpResponse<String> responseAfterDelete = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-            ArrayList<TaskData> tasksAfterDelete = gson.fromJson(responseAfterDelete.body(), new TypeToken<ArrayList<TaskData>>() {
-            }.getType());
-            assertEquals(0, tasksAfterDelete.size());
+            HttpClient.newHttpClient().send(getRequest, HttpResponse.BodyHandlers.ofString());
 
+            URI url1 = URI.create("http://localhost:8080/tasks/task");
+            HttpRequest getRequest1 = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(url1)
+                    .build();
+            HttpResponse<String> response = HttpClient.newHttpClient().send(getRequest1, HttpResponse.BodyHandlers.ofString());
+            ArrayList<TaskData> tasks = gson.fromJson(response.body(), new TypeToken<ArrayList<TaskData>>() {
+            }.getType());
+            assertEquals(0, tasks.size());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -147,10 +166,11 @@ public class HttpTaskServerTest {
         TaskData newTaskData1 = new TaskData("test", "desc");
         newTaskData.setDuration(120);
         newTaskData.setStartDate(2022, 2, 24);
-        httpTaskServer.addToTasks(newTaskData);
+        httpTaskManager.addToTasks(newTaskData);
         newTaskData1.setDuration(120);
         newTaskData1.setStartDate(2022, 2, 25);
-        httpTaskServer.addToTasks(newTaskData1);
+        httpTaskManager.addToTasks(newTaskData1);
+
         try {
             URI url = URI.create("http://localhost:8080/tasks/task");
             HttpRequest getRequest = HttpRequest.newBuilder()
@@ -178,7 +198,7 @@ public class HttpTaskServerTest {
     @Test
     void getEpicSubtasksTest() {
         EpicData epic = new EpicData("test", "testDesc", Statuses.NEW);
-        httpTaskServer.addToEpics(epic);
+        httpTaskManager.addToEpics(epic);
         SubTaskData subTaskData = new SubTaskData("testSubtask", "desc");
         SubTaskData subTaskData1 = new SubTaskData("testSubtask~1", "desc");
         subTaskData.setEpicId(epic.getId());
@@ -187,8 +207,8 @@ public class HttpTaskServerTest {
         subTaskData.setStartDate(2022, 2, 24);
         subTaskData1.setDuration(120);
         subTaskData1.setStartDate(2022, 2, 25);
-        httpTaskServer.addToSubTasks(subTaskData);
-        httpTaskServer.addToSubTasks(subTaskData1);
+        httpTaskManager.addToSubTasks(subTaskData);
+        httpTaskManager.addToSubTasks(subTaskData1);
 
         try {
             URI uri = URI.create("http://localhost:8080/tasks/subtask/epic?id=0");
@@ -208,14 +228,14 @@ public class HttpTaskServerTest {
     @Test
     void getHistoryTest() {
         EpicData epic = new EpicData("test", "testDesc", Statuses.NEW);
-        httpTaskServer.addToEpics(epic);
+        httpTaskManager.addToEpics(epic);
         SubTaskData subTaskData = new SubTaskData("testSubtask", "desc");
         subTaskData.setEpicId(epic.getId());
         subTaskData.setDuration(120);
         subTaskData.setStartDate(2022, 2, 24);
-        httpTaskServer.addToSubTasks(subTaskData);
-        httpTaskServer.getEpicById(epic.getId());
-        httpTaskServer.getSubTaskById(subTaskData.getId());
+        httpTaskManager.addToSubTasks(subTaskData);
+        httpTaskManager.getEpicById(epic.getId());
+        httpTaskManager.getSubTaskById(subTaskData.getId());
 
         try {
             URI uri = URI.create("http://localhost:8080/tasks/history");
@@ -237,11 +257,11 @@ public class HttpTaskServerTest {
         TaskData newTaskData = new TaskData("test", "desc");
         newTaskData.setDuration(120);
         newTaskData.setStartDate(2022, 2, 24);
-        httpTaskServer.addToTasks(newTaskData);
+        httpTaskManager.addToTasks(newTaskData);
         TaskData newTaskData1 = new TaskData("test", "desc");
         newTaskData1.setDuration(120);
         newTaskData1.setStartDate(2022, 2, 23);
-        httpTaskServer.addToTasks(newTaskData1);
+        httpTaskManager.addToTasks(newTaskData1);
         try {
             URI uri = URI.create("http://localhost:8080/tasks/");
             request = HttpRequest.newBuilder()
